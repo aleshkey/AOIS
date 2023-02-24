@@ -1,9 +1,16 @@
+import java.util.ArrayList;
+import java.util.List;
+
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.*;
 
 public class Main {
 
     private static boolean hasAddition = false;
+
+    private static boolean hasDebt = false;
+
+    private static String partOfCode = "0";
 
     public static String intoBinaryCode(int number){
         String result = new String();
@@ -14,16 +21,20 @@ public class Main {
             number /= 2;
         }
 
-        if(greaterThenZero){
-            result = 0 + result;
+        if(!greaterThenZero){
+            String buffer="1";
+            result = leadTo16DigitView(result);
+            for (int i = 1; i < result.length(); i++){
+                buffer = buffer + result.charAt(i);
+            }
+            result = buffer;
         }
-        else result = 1 + result;
 
-        return result;
+        return leadTo16DigitView(result);
     }
 
-    public static String leadTo8DigitView(String binaryView){
-        while (binaryView.length()<8){
+    public static String leadTo16DigitView(String binaryView){
+        while (binaryView.length() < 16){
             binaryView = 0 + binaryView;
         }
         return binaryView;
@@ -31,8 +42,8 @@ public class Main {
 
     public static String becomeReversed(String binaryCode){
         String result = "";
-        for (int i = 0; i < leadTo8DigitView(binaryCode).length(); i++) {
-            if (leadTo8DigitView(binaryCode).charAt(i) == '0') {
+        for (int i = 0; i < leadTo16DigitView(binaryCode).length(); i++) {
+            if  (leadTo16DigitView(binaryCode).charAt(i) == '0') {
                 result = result + "1";
             } else result = result + "0";
         }
@@ -44,7 +55,7 @@ public class Main {
         if (number < 0) {
            result = becomeReversed(intoBinaryCode(abs(number)));
         }
-        else result = leadTo8DigitView(intoBinaryCode(number));
+        else result = leadTo16DigitView(intoBinaryCode(number));
 
         return result;
     }
@@ -52,11 +63,14 @@ public class Main {
     public static int fromBinaryToInt(String binaryCode){
         int result=0;
 
-        for(int i=0; i<binaryCode.length(); i++){
+        for(int i=1; i<binaryCode.length(); i++){
             result+=pow(2, binaryCode.length() - 1 - i) * parseInt(String.valueOf(binaryCode.charAt(i)));
         }
 
-        return  result;
+        if(binaryCode.charAt(0)=='0') {
+            return result;
+        }
+        return -1*result;
     }
 
     public static int fromReverseBinaryToInt(String reverseBinaryCode) {
@@ -95,7 +109,7 @@ public class Main {
         return number;
     }
 
-    public static char addingDigits(char digit1, char digit2){
+    public static char  addingDigits(char digit1, char digit2){
         char res='\0';
         int sumOfDigits = parseInt(String.valueOf(digit1)) + parseInt(String.valueOf(digit2));
 
@@ -111,6 +125,42 @@ public class Main {
             hasAddition=true;
             res = (char) (sumOfDigits - 2 + '0');
         }
+
+        return res;
+    }
+
+
+    private static char minusDigits (char digit1, char digit2){
+        char res = '\0';
+        int minusOfDigits = parseInt(String.valueOf(digit1)) - parseInt(String.valueOf(digit2));
+
+        if (hasDebt){
+            minusOfDigits--;
+        }
+
+        if (minusOfDigits >= 0){
+            res = (char) (minusOfDigits + '0');
+            hasDebt = false;
+        }
+        else {
+            hasDebt = true;
+            res = (char) (minusOfDigits + 2 + '0');
+        }
+
+        return res;
+    }
+
+
+    public static String minus(String binaryCode1, String binaryCode2){
+        String res = "";
+        boolean hasDebt = false;
+        binaryCode1 = leadTo16DigitView(binaryCode1);
+        binaryCode2 = leadTo16DigitView(binaryCode2);
+
+        for (int i = binaryCode1.length()-1; i>=0; i--){
+            res = minusDigits(binaryCode1.charAt(i), binaryCode2.charAt(i)) + res;
+        }
+
 
         return res;
     }
@@ -158,13 +208,144 @@ public class Main {
         return fromBinaryToInt(additionalBinaryCode);
     }
 
+    public static String sumOfTheListOfTerm(List<String> terms){
+        String res="";
+
+        for(var t : terms){
+            res = sumInDirectCode(res, t);
+        }
+
+        return res;
+    }
+
+    public static String multiplication (int number1, int number2){
+        String binaryCode1 = intoBinaryCode(number1);
+        String binaryCode2 = intoBinaryCode(number2);
+        String res = "";
+        List<String> terms =new ArrayList<>();
+        for(int i = 0; i < binaryCode2.length(); i++){
+            terms.add(String.valueOf((int) (parseInt(binaryCode1)*parseInt(String.valueOf(binaryCode2.charAt(i)))*pow(10, i))));
+        }
+        res = sumOfTheListOfTerm(terms);
+        return res;
+    }
+
+    public static boolean isTheSameSignInRightCode(String binaryCode1, String binaryCode2){
+        if (binaryCode1.charAt(0) == binaryCode2.charAt(0)){
+            return true;
+        }
+        return false;
+    }
+
+    public static String deleteFirstSymbol(String str){
+        String res ="";
+        for (int i =1; i< str.length(); i++){
+            res = res + str.charAt(i);
+        }
+        return res;
+    }
+
+    public static String multiplication (String binaryCode1, String binaryCode2) {
+        String res = "";
+        List<String> terms = new ArrayList<>();
+
+        if (isTheSameSignInRightCode(binaryCode1, binaryCode2)){
+            res = "0";
+        }
+        else{
+            res = "1";
+        }
+
+        binaryCode1 = deleteFirstSymbol(binaryCode1);
+        binaryCode2 = deleteFirstSymbol(binaryCode2);
+
+        for (int i = 0; i < binaryCode2.length(); i++) {
+            terms.add(leadTo16DigitView(String.valueOf((int) (parseInt(binaryCode1) * parseInt(String.valueOf(binaryCode2.charAt(binaryCode2.length() - 1 - i))) * pow(10, i)))));
+        }
+
+        res = res + deleteFirstSymbol(sumOfTheListOfTerm(terms));
+        return res;
+    }
+
+    public static boolean canDivide(String dividend, String divider){
+        if (parseInt(dividend) / parseInt(divider) >= 1) {
+            return true;
+        }
+        return false;
+    }
+
+    public static String divideIntegerPart(String binaryCode1, String binaryCode2){                     //нужно уменьшить кол-во строк
+        String res = "";
+        int position = 0;
+
+        while (position < binaryCode1.length() ) {
+            if (parseInt(partOfCode) < parseInt(binaryCode2)) {
+                partOfCode = partOfCode + binaryCode1.charAt(position);
+                position++;
+                res = res + '0';
+            } else {
+                String buffer = binaryCode1;
+                binaryCode1 = String.valueOf(parseInt(minus(partOfCode, binaryCode2)));
+                partOfCode = binaryCode1 + buffer.charAt(position);
+                res = res + '1';
+
+                for (int i = position; i < buffer.length(); i++) {
+                    binaryCode1 = binaryCode1 + buffer.charAt(i);
+                }
+
+                position = partOfCode.length();
+            }
+        }
+
+        if (parseInt(partOfCode) >= parseInt(binaryCode2)){
+            res = res + 1;
+            partOfCode = String.valueOf(parseInt(minus(partOfCode, binaryCode2)))+0;
+        }
+        else {
+            res = res + 0;
+            partOfCode = partOfCode + 0;
+        }
+        return res;
+    }
+
+    public static String divideFractionalPart(String binaryCode2){
+        String res = "";
+        for(int i = 0; i < 5; i++){
+            if (parseInt(partOfCode) >= parseInt(binaryCode2)){
+                res = res + 1;
+                partOfCode = String.valueOf(parseInt(minus(partOfCode, binaryCode2)))+0;
+            }
+            else {
+                res = res + 0;
+                partOfCode = partOfCode + 0;
+            }
+        }
+        return res;
+    }
+
+
+
+    public static String dividing(String binaryCode1, String binaryCode2){
+        return parseInt(divideIntegerPart(binaryCode1, binaryCode2))+"." + divideFractionalPart(binaryCode2);
+    }
+
+
+
+
     public static void main(String[] args) {
        /* String str = sumInDirectCode(intoReverseBinaryCode(2), intoReverseBinaryCode(-3));
         System.out.println(str);
         System.out.println(fromReverseBinaryToInt(str));
-    */
+
         String str = sumInAdditionalCode(-2, 3);
         System.out.println(sumInAdditionalCode(-2, 3));
         System.out.println(fromAdditionalBinaryCodeToInt(sumInAdditionalCode(-2, 3)));
+    */
+        System.out.println(parseInt(minus("1110", "110")));
+        System.out.println(dividing("1111", "110"));
+        /*System.out.println(intoBinaryCode(-10));
+        System.out.println(intoBinaryCode(22));
+        System.out.println(multiplication(intoBinaryCode(-10), intoBinaryCode(22)));
+        //System.out.println(String.valueOf(15/4*pow(2,4)));*/
     }
 }
