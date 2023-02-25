@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.*;
@@ -62,7 +63,6 @@ public class Main {
 
     public static int fromBinaryToInt(String binaryCode){
         int result=0;
-
         for(int i=1; i<binaryCode.length(); i++){
             result+=pow(2, binaryCode.length() - 1 - i) * parseInt(String.valueOf(binaryCode.charAt(i)));
         }
@@ -86,7 +86,7 @@ public class Main {
         return  -1 *fromBinaryToInt(becomeReversed(changedReverseBinaryCode));
     }
 
-    public static String[] makeTheSameSize(String numberInBinaryCode1, String numberInBinaryCode2){
+    public static String[] makeTheSameSizeToTop(String numberInBinaryCode1, String numberInBinaryCode2){
         String[] result= new String[2];
 
         if (numberInBinaryCode1.length() > numberInBinaryCode2.length()){
@@ -101,9 +101,32 @@ public class Main {
         return result;
     }
 
+    public static String[] makeTheSameSizeToEnd(String numberInBinaryCode1, String numberInBinaryCode2){
+        String[] result= new String[2];
+
+        if (numberInBinaryCode1.length() > numberInBinaryCode2.length()){
+            result[0] = numberInBinaryCode1;
+            result[1] = addZeroToEnd(numberInBinaryCode2, numberInBinaryCode1.length()-numberInBinaryCode2.length());
+        }
+        else {
+            result[1] = numberInBinaryCode2;
+            result[0] = addZeroToEnd(numberInBinaryCode1, numberInBinaryCode2.length()-numberInBinaryCode1.length());
+        }
+
+        return result;
+    }
+
     public static String addZeroToTop(String number, int zerosToAdd){
         for(var i = 0; i < zerosToAdd; i++){
             number = 0 + number;
+        }
+
+        return number;
+    }
+
+    public static String addZeroToEnd(String number, int zerosToAdd){
+        for(var i = 0; i < zerosToAdd; i++){
+            number = number + 0;
         }
 
         return number;
@@ -161,13 +184,13 @@ public class Main {
             res = minusDigits(binaryCode1.charAt(i), binaryCode2.charAt(i)) + res;
         }
 
-
+        hasDebt = false;
         return res;
     }
 
     public static String sumInDirectCode(String numberInBinaryCode1, String numberInBinaryCode2){
         String result = new String();
-        String[] numbers = makeTheSameSize(numberInBinaryCode1, numberInBinaryCode2);
+        String[] numbers = makeTheSameSizeToTop(numberInBinaryCode1, numberInBinaryCode2);
 
         for (var i = numbers[0].length()-1; i>=0; i--){
             result = addingDigits(numbers[0].charAt(i), numbers[1].charAt(i)) + result;
@@ -310,6 +333,8 @@ public class Main {
 
     public static String divideFractionalPart(String binaryCode2){
         String res = "";
+        partOfCode = String.valueOf(parseInt(partOfCode));
+        binaryCode2 = String.valueOf(parseInt(binaryCode2));
         for(int i = 0; i < 5; i++){
             if (parseInt(partOfCode) >= parseInt(binaryCode2)){
                 res = res + 1;
@@ -326,26 +351,120 @@ public class Main {
 
 
     public static String dividing(String binaryCode1, String binaryCode2){
-        return parseInt(divideIntegerPart(binaryCode1, binaryCode2))+"." + divideFractionalPart(binaryCode2);
+        int buffer = parseInt(divideIntegerPart(binaryCode1, binaryCode2));
+        var buf = divideFractionalPart(binaryCode2);
+        partOfCode="0";
+        return String.valueOf(buffer+"." + buf);
+    }
+
+    public static String changeSize(int size, String binaryCode){
+        for (int i = binaryCode.length(); i<size; i++){
+            binaryCode = 0 + binaryCode;
+        }
+        return binaryCode;
+    }
+
+    public static String floatIntoBinary(float number){
+        String integer = String.valueOf(number).split("\\.")[0];
+        float fraction = number - parseInt(integer);
+        integer = String.valueOf(parseInt(intoBinaryCode(parseInt(String.valueOf(number).split("\\.")[0]))));
+        String result = integer+".";
+        int counter = -1;
+
+        while(fraction > 0){
+            if (fraction - pow(2, counter) >= 0){
+                result = result + 1;
+                fraction -= pow(2, counter);
+            }
+            else {
+                result = result + 0;
+            }
+            counter--;
+        }
+
+        return result;
+
+    }
+
+    public static String floatSum(float number1, float number2){
+        String buf = floatIntoBinary(number2);
+        String integerOfNumber1 = floatIntoBinary(number1).split("\\.")[0];
+        String floatOfNumber1 = floatIntoBinary(number1).split("\\.")[1];
+        String integerOfNumber2 = floatIntoBinary(number2).split("\\.")[0];
+        String floatOfNumber2 = floatIntoBinary(number2).split("\\.")[1];
+        integerOfNumber1 = makeTheSameSizeToTop(integerOfNumber1, integerOfNumber2)[0];
+        integerOfNumber2 = makeTheSameSizeToTop(integerOfNumber1, integerOfNumber2)[1];
+        floatOfNumber1 = makeTheSameSizeToEnd(floatOfNumber1, floatOfNumber2)[0];
+        floatOfNumber2 = makeTheSameSizeToEnd(floatOfNumber1, floatOfNumber2)[1];
+        String res = parseInt(sumInDirectCode(integerOfNumber1, integerOfNumber2)) + "." + sumInDirectCode(floatOfNumber1, floatOfNumber2);
+        return res;
+    }
+
+    public static void printMenu(){
+        System.out.println("1 - sum\n" +
+                           "2 - multiplication\n" +
+                           "3 - dividing\n" +
+                           "4 - sum of float");
+        Scanner sc = new Scanner(System.in);
+        int kod = sc.nextInt();
+        System.out.println("enter two integer numbers");
+        float num1 = sc.nextFloat(), num2 = sc.nextFloat();
+        chooseOperation(kod, num1, num2);
+    }
+
+    private static void chooseOperation(int kod, float num1, float num2) {
+        switch (kod){
+            case 1:{
+                sum((int)num1, (int)num2);
+                break;
+            }
+            case 2:{
+                System.out.println(intoBinaryCode((int)num1)+"\n*\n"+intoBinaryCode((int)num2)+"\n-----------------------------------");
+                System.out.println(multiplication(intoBinaryCode((int)num1), intoBinaryCode((int)num2)));
+                break;
+            }
+            case 3:{
+                System.out.println(intoBinaryCode((int)num1)+"\n/\n"+intoBinaryCode((int)num2)+"\n-----------------------------------");
+                System.out.println(dividing(intoBinaryCode((int)num1), intoBinaryCode((int)num2)));
+            }
+            case 4: {
+                System.out.println(floatSum((float) num1, (float) num2));
+                break;
+            }
+        }
+    }
+
+    private static void sum(int num1, int num2) {
+        System.out.println("1 - in direct code\n" +
+                           "2 - in reverse code\n" +
+                           "3 - in addition code");
+        Scanner s = new Scanner(System.in);
+        switch (s.nextInt()){
+            case 1: {
+                System.out.println(intoBinaryCode((int)num1)+"\n+\n"+intoBinaryCode((int)num2)+"\n-----------------------------------");
+                System.out.println(sumInDirectCode(intoBinaryCode((int)num1), intoBinaryCode((int)num2)));
+                break;
+            }
+            case 2:{
+                System.out.println(intoReverseBinaryCode((int)num1)+"\n+\n"+intoReverseBinaryCode((int)num2)+"\n-----------------------------------");
+                System.out.println(sumInReverseCode((int)num1, (int)num2));
+                break;
+            }
+            case 3:{
+                System.out.println(getAdditionalCode((int)num1)+"\n+\n"+getAdditionalCode((int)num2)+"\n-----------------------------------");
+                System.out.println(sumInAdditionalCode((int)num1, (int)num2));
+                break;
+            }
+
+        }
+
     }
 
 
-
-
     public static void main(String[] args) {
-       /* String str = sumInDirectCode(intoReverseBinaryCode(2), intoReverseBinaryCode(-3));
-        System.out.println(str);
-        System.out.println(fromReverseBinaryToInt(str));
-
-        String str = sumInAdditionalCode(-2, 3);
-        System.out.println(sumInAdditionalCode(-2, 3));
-        System.out.println(fromAdditionalBinaryCodeToInt(sumInAdditionalCode(-2, 3)));
-    */
-        System.out.println(parseInt(minus("1110", "110")));
-        System.out.println(dividing("1111", "110"));
-        /*System.out.println(intoBinaryCode(-10));
-        System.out.println(intoBinaryCode(22));
-        System.out.println(multiplication(intoBinaryCode(-10), intoBinaryCode(22)));
-        //System.out.println(String.valueOf(15/4*pow(2,4)));*/
+        floatSum(1.3f, 123.213f);
+        while (true) {
+            printMenu();
+        }
     }
 }
