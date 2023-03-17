@@ -1,10 +1,15 @@
 import Parser.Parser;
+import operations.Operations;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
+    private static final Parser parser = new Parser();
+    private static final List<List<Boolean> > table = new ArrayList<>();
+    private static final List<Integer> sknf_indexes = new ArrayList<>();
+    private static final List<Integer> sdnf_indexes = new ArrayList<>();
 
     private static String[] makeUnique(String[] arr){
         List<String> res = new ArrayList<>();
@@ -18,8 +23,25 @@ public class Main {
         return r;
     }
 
+    private static void printTable(String[] variables, boolean[] result){
+        for (String variable : variables) {
+            System.out.format("%10s", variable);
+        }
+        System.out.format("%10s\n","Result");
+
+        for (int i = 0; i < result.length; i++) {
+            boolean[] values = parser.getValues(i, variables.length);
+            List<Boolean> buffer = new ArrayList<>();
+            for (boolean value : values) {
+                buffer.add(value);
+                System.out.format("%10s", value);
+            }
+            table.add(buffer);
+            System.out.format("%10s\n", result[i]);
+        }
+    }
+
     public static void main(String[] args) {
-        Parser parser = new Parser();
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter a boolean expression: ");
         String expression = scanner.nextLine();
@@ -32,22 +54,16 @@ public class Main {
             result[i] = parser.parse(expression, values);
         }
 
-        for (String variable : variables) {
-            System.out.format("%10s", variable);
-        }
-        System.out.format("%10s\n","Result");
-
-        List<List<String> > table = new ArrayList<>();
-        List<Integer> sknf_indexes = new ArrayList<>();
-        List<Integer> sdnf_indexes = new ArrayList<>();
-        
-        for (int i = 0; i < result.length; i++) {
-            boolean[] values = parser.getValues(i, variables.length);
-            for (boolean value : values) {
-
-                System.out.format("%10s", value);
-            }
-            System.out.format("%10s\n", result[i]);
-        }
+        printTable(variables, result);
+        System.out.println("\n");
+        System.out.println(Operations.SDNF(variables, table, result));
+        System.out.println("\n");
+        System.out.println(Operations.SKNF(variables, table, result));
+        System.out.println("\n");
+        System.out.println(Operations.toIndexForm(table, result));
+        System.out.println("\n");
+        System.out.println(Operations.toNumberFormSDNF(Operations.SDNF(variables, table, result)));
+        System.out.println("\n");
+        System.out.println(Operations.toNumberFormSKNF(Operations.SKNF(variables, table, result)));
     }
 }

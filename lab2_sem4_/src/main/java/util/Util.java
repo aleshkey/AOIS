@@ -20,19 +20,19 @@ public class Util {
                     rpn.append(stack.pop());
                 }
                 if (!stack.isEmpty()) {
-                    stack.pop(); // удаляем открывающую скобку
+                    stack.pop();
                 }
-            } else if (isOperator(c)) { // оператор - добавляем в стек
+            } else if (isOperator(c)) {
                 while (!stack.isEmpty() && priority(stack.peek()) >= priority(c)) {
                     rpn.append(stack.pop());
                 }
                 stack.push(c);
-            } else { // операнд - добавляем в ОПЗ
+            } else {
                 rpn.append(c);
             }
         }
 
-        while (!stack.isEmpty()) { // извлекаем оставшиеся операторы из стека и добавляем в ОПЗ
+        while (!stack.isEmpty()) {
             rpn.append(stack.pop());
         }
 
