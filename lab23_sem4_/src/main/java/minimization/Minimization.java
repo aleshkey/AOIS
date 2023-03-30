@@ -3,8 +3,6 @@ package minimization;
 import operations.Operations;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class Minimization {
      private static boolean find(List<String> originalString, String stringToFind){
@@ -38,20 +36,18 @@ public class Minimization {
         char stringOperator = isANDSeparator ? '&' : '|';
         List<String> a = divideString(s1, isANDSeparator);
         List<String> b = divideString(s2, isANDSeparator);
-        String res = "";
+        StringBuilder res = new StringBuilder();
         int k=0;
-        for(int i =0; i<a.size(); i++){
-            for (int j = 0; j<b.size(); j++){
-                if (a.get(i).equals(b.get(j))){
-                    if (res.equals("")){
-                        res = res + a.get(i);
-                    }
-                    else res = res + stringOperator + a.get(i);
+        for (String s : a) {
+            for (int j = 0; j < b.size(); j++) {
+                if (s.equals(b.get(j))) {
+                    if (res.toString().equals("")) {
+                        res.append(s);
+                    } else res.append(stringOperator).append(s);
                     break;
-                }
-                else if (j == b.size()-1) k++;
+                } else if (j == b.size() - 1) k++;
             }
-            if (k>1){
+            if (k > 1) {
                 return "";
             }
         }
@@ -61,42 +57,42 @@ public class Minimization {
 
     private static String gluing(String originalString, boolean isANDSeparator){
         char reverseOperator = isANDSeparator ? '|' : '&';
-        String resultString ="";
+        StringBuilder resultString = new StringBuilder();
 
         List<String> functionalParts = divideStringWithBrackets(originalString, isANDSeparator);
 
         for (int i = 0; i<functionalParts.size(); i++){
             for (int j =i+1; j<functionalParts.size(); j++){
                 if (!findSharedPart(functionalParts.get(i), functionalParts.get(j), isANDSeparator).equals("")){
-                    if (resultString.equals("")){
-                        resultString = resultString + findSharedPart(functionalParts.get(i), functionalParts.get(j), isANDSeparator);
+                    if (resultString.toString().equals("")){
+                        resultString.append(findSharedPart(functionalParts.get(i), functionalParts.get(j), isANDSeparator));
                     }
-                    else resultString = resultString + reverseOperator + findSharedPart(functionalParts.get(i), functionalParts.get(j), isANDSeparator);
+                    else resultString.append(reverseOperator).append(findSharedPart(functionalParts.get(i), functionalParts.get(j), isANDSeparator));
                 }
             }
         }
-        return resultString;
+        return resultString.toString();
     }
 
     private static boolean checkExcess(List<String> functionParts, int index, boolean isANDSeparator){
         List<List<String>> constituentsMatrix = new ArrayList<>();
-        for (int i = 0; i<functionParts.size(); i++){
-            constituentsMatrix.add(divideString(functionParts.get(i), isANDSeparator));
+        for (String functionPart : functionParts) {
+            constituentsMatrix.add(divideString(functionPart, isANDSeparator));
         }
         List<String> tempPart = constituentsMatrix.get(index);
         for(int counter =0; counter <tempPart.size(); counter++) {
             List<String> neighbors = new ArrayList<>();
-            for (int i = 0; i < constituentsMatrix.size(); i++) {
-                if (find(constituentsMatrix.get(i), tempPart.get(counter))) {
-                    for (int j = 0; j< constituentsMatrix.get(i).size(); j++){
-                        if (!tempPart.get(counter).equals(constituentsMatrix.get(i).get(j))){
-                            neighbors.add(constituentsMatrix.get(i).get(j));
+            for (List<String> matrix : constituentsMatrix) {
+                if (find(matrix, tempPart.get(counter))) {
+                    for (String s : matrix) {
+                        if (!tempPart.get(counter).equals(s)) {
+                            neighbors.add(s);
                         }
                     }
                 }
             }
-            for (int i = 0; i < tempPart.size(); i++){
-                if (find(neighbors, reverse(tempPart.get(i)))){
+            for (String s : tempPart) {
+                if (find(neighbors, reverse(s))) {
                     return true;
                 }
             }
@@ -141,15 +137,14 @@ public class Minimization {
 
         List<List<Integer>> constituentsToImplications = new ArrayList<>();
 
-        for (int implicationIndex = 0; implicationIndex < implications.size(); implicationIndex++){
-            System.out.format("\n%20s", implications.get(implicationIndex));
+        for (String implication : implications) {
+            System.out.format("\n%20s", implication);
             List<Integer> thisConstituentImplications = new ArrayList<>();
-            for (int constituentsIndex =0; constituentsIndex<constituents.size(); constituentsIndex++){
-                if (exist(implications.get(implicationIndex).substring(1, implications.get(implicationIndex).length()-1), constituents.get(constituentsIndex), !isANDSeparator)){
+            for (int constituentsIndex = 0; constituentsIndex < constituents.size(); constituentsIndex++) {
+                if (exist(implication.substring(1, implication.length() - 1), constituents.get(constituentsIndex), !isANDSeparator)) {
                     System.out.format("%20s", "X");
                     thisConstituentImplications.add(constituentsIndex);
-                }
-                else System.out.format("%20s", "--");
+                } else System.out.format("%20s", "--");
             }
             constituentsToImplications.add(thisConstituentImplications);
         }
@@ -158,15 +153,6 @@ public class Minimization {
         List<List<Integer>> resConstituents =  new ArrayList<>();
 
         Map <Integer, Boolean> switchedConstituents = createHashMap(constituents);
-
-        for (int constituentsIndex = 0; constituentsIndex<constituentsToImplications.size(); constituentsIndex++){
-            if (getImplicationsSet(constituentsToImplications, constituentsIndex).size()==1){
-                resId.add(constituentsToImplications.get(constituentsIndex).get(0));
-                resConstituents.add(constituentsToImplications.get(constituentsIndex));
-                switchedConstituents = turnOnConstituent(switchedConstituents, constituentsToImplications.get(constituentsIndex));
-            }
-        }
-
 
         while (!isStrongTable(switchedConstituents)){
             int bestChoice = chooseBestVariant(switchedConstituents, constituentsToImplications);
@@ -240,36 +226,14 @@ public class Minimization {
     private static void printResult(List<String> implications, List<Integer> resId, boolean isANDSeparator) {
          String stringOperator = isANDSeparator ? "&" : "|";
          StringBuilder res = new StringBuilder();
-         for (int i = 0; i< resId.size(); i++){
-             if (!res.toString().equals("")){
-                 res.append(stringOperator);
-             }
-            res.append(implications.get(resId.get(i)));
-         }
+        for (Integer integer : resId) {
+            if (!res.toString().equals("")) {
+                res.append(stringOperator);
+            }
+            res.append(implications.get(integer));
+        }
         System.out.println("\nИтог минимизации: "+res);
     }
-
-    private static List<Integer> setsUnion(List<List<Integer>> sets){
-         Set<Integer> res = new HashSet<>();
-         for (var set : sets){
-             Set<Integer> buffer = new HashSet<>(set);
-             res.addAll(buffer);
-         }
-         return new ArrayList<>(res);
-    }
-
-
-
-    private static List<Integer> getImplicationsSet(List<List<Integer>> constituentToImplications, int id){
-         List <Integer> res = new ArrayList<>();
-         for(int listIndex =0; listIndex < constituentToImplications.size(); listIndex++){
-             if (constituentToImplications.get(listIndex).contains(id)){
-                 res.add(listIndex);
-             }
-         }
-         return res;
-    }
-
 
     public static void minimize(String[] variables, List<List<Boolean>> table, boolean[] result) {
         String DNF;
