@@ -11,9 +11,8 @@ public class Main {
     private static final Parser parser = new Parser();
     private static final List<List<Boolean> > table = new ArrayList<>();
 
-//(A | !B) & (!A | (C | B))
+    //(A | B) & (A | !C)
 
-    //(A | B) & (A & !C)
     private static void printTable(String[] variables, boolean[] result){
         for (String variable : variables) {
             System.out.format("%10s", variable);
@@ -48,7 +47,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter a boolean expression: ");
         String expression = scanner.nextLine();
-        String[] variables = Util.makeUnique(expression.split("[&|!() ]+"));
+        String[] variables = Util.makeUnique(expression.split("[&|!()> ]+"));
         boolean[] result = new boolean[1 << variables.length];
         for (int index = 0; index < result.length; index++) {
             boolean[] values = parser.getValues(index, variables.length);

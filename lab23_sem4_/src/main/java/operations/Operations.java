@@ -114,7 +114,7 @@ public class Operations {
         return res + ")";
     }
 
-    private static int fromBoolToInt(boolean flag) {
+    public static int fromBoolToInt(boolean flag) {
         return flag ? 1 : 0;
     }
 

@@ -1,6 +1,7 @@
 package minimization;
 
 import operations.Operations;
+import util.Util;
 
 import java.util.*;
 
@@ -335,6 +336,140 @@ public class Minimization {
         System.out.println("\n"+res+"\nИтог минимизации: "+NFtoTDF(res.toString(), isANDSeparator));
     }
 
+    private static void carnoMinimization(String[] variables, List<List<Boolean>> table, boolean[] result) {
+        List<String> res = new ArrayList<>();
+        String vars = "";
+        for (int i = 0; i < variables.length / 2; i++) {
+            vars = vars + variables[i];
+        }
+        vars = vars + "\\";
+        for (int i = variables.length / 2; i < variables.length; i++) {
+            vars = vars + variables[i];
+        }
+
+        System.out.format("%10s", "\n" + vars);
+        System.out.format("%10s", "00");
+        System.out.format("%10s", "01");
+        System.out.format("%10s", "11");
+        System.out.format("%10s", "10");
+
+        List<List<Boolean>> parts =createKMap(result);
+
+        for(int i = 0; i< 2; i++){
+            System.out.format("%10s", "\n"+i);
+            for (var b : parts.get(i)){
+                System.out.format("%10s", Operations.fromBoolToInt(b));
+
+            }
+        }
+
+        printCarno(parts, variables);
+
+    }
+
+    private static List<String> carno(List<List<Boolean>> parts, String[] variables, boolean isANDSeparator){
+        List<String> res = new ArrayList<>();
+        if (!isANDSeparator)
+            parts = reverseList(parts);
+        for(int i=0; i< parts.size(); i++){
+            for (int j =0; j< parts.get(i).size(); j++){
+                if (j!=parts.get(i).size()-1 && parts.get(i).get(j) && parts.get(i).get(j+1)){
+                    res.add(chooseFormula(variables ,i, true, isANDSeparator));
+                }
+                if (i!=parts.size()-1 && parts.get(i).get(j) && parts.get(i+1).get(j)){
+                    res.add(chooseFormula(variables, j, false,isANDSeparator));
+                }
+            }
+        }
+        res = makeUnique(res);
+        return res;
+    }
+
+    private static List<List<Boolean>> reverseList(List<List<Boolean>> parts) {
+         List<List<Boolean>> res = new ArrayList<>();
+         for (var list : parts){
+             List<Boolean> buff = new ArrayList<>();
+             for (var bool : list){
+                 buff.add(!bool);
+             }
+             res.add(buff);
+         }
+         return res;
+    }
+
+    private static void printCarno(List<List<Boolean>> parts, String[] variables) {
+         List<String> res = carno(parts, variables, true);
+         printCarnoRes(res, true);
+    }
+
+    private static void printCarnoRes(List<String> res, boolean isANDSeparator) {
+        StringBuilder result = new StringBuilder();
+        String reverseOperator = isANDSeparator ? "|" : "&";
+        for (var s : res){
+            if (result.toString().equals("")){
+                result = new StringBuilder(s);
+            }
+            else {
+                result.append(reverseOperator).append(s);
+            }
+        }
+        System.out.println("\nИтог минимизации: "+result);
+    }
+
+    private static List<String> makeUnique(List<String> list){
+        Set<String> set = new HashSet<>(list);
+        list.clear();
+        list.addAll(set);
+        list.removeAll(Collections.singleton(null));
+        return list;
+    }
+
+    private static String chooseFormula(String[] variables, int index, boolean isHorizontal, boolean isANDSeparator) {
+         String stringOperator = isANDSeparator ? "&" : "|";
+        if (isHorizontal){
+            return index == 1 ? variables[0] : "!"+variables[0];
+        }
+        else{
+            switch (index){
+                case 0:{
+                    return "(!"+variables[1]+stringOperator+"!"+variables[2]+")";
+                }
+                case 1:{
+                    return "(!"+variables[1]+stringOperator+variables[2]+")";
+                }
+                case 2:{
+                    return "("+variables[1]+stringOperator+variables[2]+")";
+                }
+                default:{
+                    return "("+variables[1]+stringOperator+"!"+variables[2]+")";
+                }
+            }
+        }
+     }
+
+    private static List<List<Boolean>> createKMap(boolean[] result) {
+        List<List<Boolean>> res = new ArrayList<>();
+        int counter =0;
+        for(int i =1; i<3; i++){
+            List<Boolean> buff = new ArrayList<>();
+            while (counter < result.length/2*i){
+                if (result.length/2*i - counter == 2){
+                    buff.add(result[counter+1]);
+                }
+                else
+                    if (result.length/2*i - counter == 1){
+                        buff.add(result[counter-1]);
+                    }
+                    else
+                        buff.add(result[counter]);
+                counter++;
+            }
+            res.add(buff);
+        }
+        return res;
+    }
+
+
     public static void minimize(String[] variables, List<List<Boolean>> table, boolean[] result) {
         String DNF;
         String defaultSDNF = Operations.SDNF(variables, table, result).replaceAll(" ", "");
@@ -361,6 +496,8 @@ public class Minimization {
 
         System.out.println("\n\nРасчетно-табличный метод\nСКНФ: "+defaultSCNF+"\n");
         printTable(defaultSCNF, false);
+
+        carnoMinimization(variables, table, result);
     }
 
 }
