@@ -1,7 +1,6 @@
 package minimization;
 
 import operations.Operations;
-import util.Util;
 
 import java.util.*;
 
@@ -9,9 +8,6 @@ public class Minimization {
 
     private static final List<String> topVars = new ArrayList<>(Arrays.asList("!B !C", "!B C", "B C", "B !C"));
     private static final List<String> leftVars = new ArrayList<>(Arrays.asList("!A", "A"));
-     private static boolean find(List<String> originalString, String stringToFind){
-        return originalString.contains(stringToFind);
-    }
 
     private static String reverse(String originalString){
         return (originalString.charAt(0)=='!') ? originalString.substring(1) : "!" + originalString;
@@ -27,16 +23,16 @@ public class Minimization {
 
         String reverseOperator = isANDSeparator ? "\\|" : "&";
 
-        String[] buff = originalString.split(reverseOperator);
+        String[] termArray = originalString.split(reverseOperator);
 
 
-        if (buff.length > 1) {
-            for (var b : buff) {
-                res.add(b.substring(1, b.length() - 1));
+        if (termArray.length > 1) {
+            for (var term : termArray) {
+                res.add(term.substring(1, term.length() - 1));
             }
         }
         else
-            if (buff.length!=0){
+            if (termArray.length!=0){
                 res.add(originalString);
             }
 
@@ -45,24 +41,24 @@ public class Minimization {
 
     private static String findSharedPart(String s1, String s2, boolean isANDSeparator){
         char stringOperator = isANDSeparator ? '&' : '|';
-        List<String> a = divideString(s1, isANDSeparator);
-        List<String> b = divideString(s2, isANDSeparator);
+        List<String> firstString = divideString(s1, isANDSeparator);
+        List<String> secondString = divideString(s2, isANDSeparator);
         StringBuilder res = new StringBuilder();
         int counter = 0;
-        for (String s : a) {
-            for (int j = 0; j < b.size(); j++) {
-                if (s.equals(b.get(j))) {
+        for (String s : firstString) {
+            for (String value : secondString) {
+                if (s.equals(value)) {
                     counter++;
                     if (res.toString().equals("")) {
                         res.append(s);
                     } else res.append(stringOperator).append(s);
                 }
             }
-            if (counter == a.size()-1){
+            if (counter == firstString.size()-1){
                 break;
             }
         }
-        return res.equals("") || res.indexOf(String.valueOf(stringOperator)) == -1 ? "" : "("+res+")";
+        return res.toString().equals("") || res.indexOf(String.valueOf(stringOperator)) == -1 ? "" : "("+res+")";
     }
 
 
@@ -100,35 +96,11 @@ public class Minimization {
             }
         }
         return res;
-        /*List<List<String>> constituentsMatrix = new ArrayList<>();
-        for (String functionPart : functionParts) {
-            constituentsMatrix.add(divideString(functionPart, isANDSeparator));
-        }
-        List<String> tempPart = constituentsMatrix.get(index);
-        for(int counter =0; counter <tempPart.size(); counter++) {
-            List<String> neighbors = new ArrayList<>();
-            for (List<String> matrix : constituentsMatrix) {
-                if (find(matrix, tempPart.get(counter))) {
-                    for (String s : matrix) {
-                        if (!tempPart.get(counter).equals(s)) {
-                            neighbors.add(s);
-                        }
-                    }
-                }
-            }
-            for (String s : tempPart) {
-                if (find(neighbors, reverse(s))) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    */
     }
 
     private static boolean checkReversed(List<String> expression1, List<String> expression2){
-         for (var s : expression2){
-             if (expression1.contains(reverse(s))){
+         for (var str : expression2){
+             if (expression1.contains(reverse(str))){
                  return true;
              }
          }
@@ -137,16 +109,15 @@ public class Minimization {
 
     private static List<String> unionString(List<String> expression1, List<String> expression2){
          List<String> res = new ArrayList<>();
-         for (var s : expression2){
-             if (expression1.contains(s)){
-                res.add(s);
+         for (var str : expression2){
+             if (expression1.contains(str)){
+                res.add(str);
              }
          }
          return res;
     }
 
     private static String fromListToNF(List<String> list, boolean isANDSeparator){
-         String stringOperator = isANDSeparator ? "&" : "|";
          String reversedOperator = !isANDSeparator ? "&" : "|";
          StringBuilder res = new StringBuilder();
          for (var el : list){
@@ -165,38 +136,27 @@ public class Minimization {
         String stringOperator = isANDSeparator ? "&" : "\\|";
         String reversedOperator = !isANDSeparator ? "&" : "|";
         for (int i = 0; i< functionParts.size(); i++){
-            String buff = "";
+            String unique = "";
             if (checkExcess(functionParts, i, isANDSeparator)!=-1){
                 List<String> tempPartList = Arrays.asList(functionParts.get(i).split(stringOperator));
                 List<String> checkedPartList = Arrays.asList(functionParts.get(checkExcess(functionParts, i, isANDSeparator)).split(stringOperator));
                 String union = fromListToNF(unionString(tempPartList, checkedPartList), isANDSeparator);
-                buff = buff + "("+union+")";
+                unique = unique + "("+union+")";
                 functionParts.remove(checkExcess(functionParts, i, isANDSeparator));
                 functionParts.remove(i);
                 i--;
             }
-            else buff = buff + "("+functionParts.get(i)+")";
+            else unique = unique + "("+functionParts.get(i)+")";
             if (res.toString().equals("")){
-                res.append(buff);
+                res.append(unique);
             }
             else {
-                if (res.indexOf(buff) == -1) {
-                    res.append(reversedOperator).append(buff);
+                if (res.indexOf(unique) == -1) {
+                    res.append(reversedOperator).append(unique);
                 }
             }
         }
         return res.toString();
-        /*List<String> functionParts = divideStringWithBrackets(originalString, isANDSeparator);
-        for (int i = 0; i< functionParts.size(); i++){
-            if (checkExcess(functionParts, i, isANDSeparator)){
-                var check = originalString.indexOf(functionParts.get(i));
-                String buffer = originalString.substring(originalString.indexOf(functionParts.get(i))+functionParts.get(i).length()+2);
-                originalString = originalString.substring(0, originalString.indexOf(functionParts.get(i))-1)+originalString.substring(originalString.indexOf(functionParts.get(i))+functionParts.get(i).length()+2);
-                functionParts.remove(i);
-                i--;
-            }
-        }
-        return originalString;*/
     }
 
     private static boolean exist (String stringWhat, String stringIn, boolean isANDSeparator){
@@ -316,8 +276,6 @@ public class Minimization {
          return res;
     }
 
-
-
     private static boolean isStrongTable(Map<Integer, Boolean> switchedConstituents){
          for (boolean value : switchedConstituents.values()) {
             if (!value) {
@@ -339,63 +297,67 @@ public class Minimization {
         System.out.println("\n"+res+"\nИтог минимизации: "+NFtoTDF(res.toString(), isANDSeparator));
     }
 
-    private static void carnoMinimization(String[] variables, List<List<Boolean>> table, boolean[] result) {
-        List<String> res = new ArrayList<>();
-        String vars = "";
-        for (int i = 0; i < variables.length / 2; i++) {
-            vars = vars + variables[i];
+    private static String getCarnoVars(String[] variables){
+        StringBuilder vars = new StringBuilder();
+         for (int i = 0; i < variables.length / 2; i++) {
+            vars.append(variables[i]);
         }
-        vars = vars + "\\";
+        vars.append("\\");
         for (int i = variables.length / 2; i < variables.length; i++) {
-            vars = vars + variables[i];
+            vars.append(variables[i]);
         }
+        return vars.toString();
+    }
 
-
-
-        System.out.format("%10s", "\n" + vars);
+    private static void printTopVars(){
         for (var s : topVars) {
-            System.out.format("%10s", s);
+            System.out.format("%20s", s);
         }
+    }
+
+    private static void carnoMinimization(String[] variables, boolean[] result) {
+        String vars = getCarnoVars(variables);
+        System.out.format("%20s", vars);
+        printTopVars();
         List<List<Boolean>> parts =createKMap(result);
 
         for(int i = 0; i< leftVars.size(); i++){
-            System.out.format("%10s", "\n"+leftVars.get(i));
+            System.out.println();
+            System.out.format("%20s", leftVars.get(i));
             for (var b : parts.get(i)){
-                System.out.format("%10s", Operations.fromBoolToInt(b));
-
+                System.out.format("%20s", Operations.fromBoolToInt(b));
             }
         }
 
-        printCarno(parts, variables);
+        printCarno(parts);
 
     }
 
-    private static List<String> carno(List<List<Boolean>> parts, String[] variables, boolean isANDSeparator){
+    private static List<String> carno(List<List<Boolean>> parts){
         List<String> res = new ArrayList<>();
         for(int i = 0; i< parts.size(); i++){
-            List<String> buff = new ArrayList<>();
-            outerloop:
             for (int start =0; start < parts.get(i).size(); start++) {
                 if (start != parts.get(i).size() - 1) {
                     for (int finish = parts.get(i).size() - 1; finish >= start; finish--) {
                         if (checkRow(parts.get(i), start, finish - start) && i != parts.size() - 1 && checkRow(parts.get(i + 1), start, finish - start)) {
-                            var atomTopTerms = getArrayOfAtomTerms(start, finish - start, i);
-                            var atomDownTerms = getArrayOfAtomTerms(start, finish - start, i + 1);
-                            var union = unionString(atomDownTerms, atomTopTerms);
-                            res.add("(" + fromListToNF(union, false) + ")");
+                            if(!parts.get(i).get(start) && !parts.get(i).get(parts.get(i).size()-1) && !parts.get(i+1).get(start) && !parts.get(i+1).get(parts.get(i).size()-1)) {
+                                var atomTopTerms = getArrayOfAtomTerms(start, finish - start, i);
+                                var atomDownTerms = getArrayOfAtomTerms(start, finish - start, i + 1);
+                                var union = unionString(atomDownTerms, atomTopTerms);
+                                res.add("(" + fromListToNF(union, false) + ")");
+                            }
                         } else {
                             if (checkRow(parts.get(i), start, finish - start) && start - finish != 0) {
                                 var atomTerms = getArrayOfAtomTerms(start, finish - start, i);
                                 res.add("(" + fromListToNF(atomTerms, false) + ")");
-                                break outerloop;
                             }
                         }
                     }
                 }
                 else {
-                    if (parts.get(i).get(start)){
+                    if (parts.get(i).get(start) && i!=parts.size()-1 &&!parts.get(i+1).get(start)) {
                         int counter = 0;
-                        for (int finish = parts.get(i).size()-1; finish>=0; finish--) {
+                        for (int finish = parts.get(i).size() - 1; finish >= 0; finish--) {
                             if (checkRow(parts.get(i), 0, finish - 1)) {
                                 var atomTerms = getArrayOfAtomTerms(0, finish - 1, i);
                                 var buffer = getArrayOfAtomTerms(parts.get(i).size() - 1, 0, i);
@@ -404,12 +366,25 @@ public class Minimization {
                                 counter++;
                             }
                         }
-                        if (counter == 0){
+                        if (counter == 0) {
                             if (checkRow(parts.get(i), start, 0) && i != parts.size() - 1 && checkRow(parts.get(i + 1), start, 0)) {
                                 var atomTopTerms = getArrayOfAtomTerms(start, 0, i);
                                 var atomDownTerms = getArrayOfAtomTerms(start, 0, i + 1);
                                 var union = unionString(atomDownTerms, atomTopTerms);
                                 res.add("(" + fromListToNF(union, false) + ")");
+                            }
+                        }
+                    }
+                    else {
+                        if (parts.get(i).get(start) && i!=parts.size()-1 && parts.get(i+1).get(start)){
+                            var atomTopVars =getArrayOfAtomTerms(start, 0, i);
+                            var atomDownVars = getArrayOfAtomTerms(start, 0, i+1);
+                            var uniqueTerms = unionString(atomDownVars, atomTopVars);
+                            for (int finish = 0; finish<parts.get(i).size()-1; finish++){
+                                var topVars = getArrayOfAtomTerms(0, finish, i);
+                                var downVars = getArrayOfAtomTerms(0, finish, i+1);
+                                var union = unionString(topVars, downVars);
+                                res.add("("+fromListToNF(unionString(uniqueTerms, union), false)+")");
                             }
                         }
                     }
@@ -452,20 +427,8 @@ public class Minimization {
          else return false;
     }
 
-    private static List<List<Boolean>> reverseList(List<List<Boolean>> parts) {
-         List<List<Boolean>> res = new ArrayList<>();
-         for (var list : parts){
-             List<Boolean> buff = new ArrayList<>();
-             for (var bool : list){
-                 buff.add(!bool);
-             }
-             res.add(buff);
-         }
-         return res;
-    }
-
-    private static void printCarno(List<List<Boolean>> parts, String[] variables) {
-         List<String> res = carno(parts, variables, true);
+    private static void printCarno(List<List<Boolean>> parts) {
+         List<String> res = carno(parts);
          printCarnoRes(res, true);
     }
 
@@ -480,39 +443,17 @@ public class Minimization {
                 result.append(reverseOperator).append(s);
             }
         }
-        System.out.println("\nИтог минимизации: "+result);
+        var r = NFtoTDF(result.toString(), isANDSeparator);
+        System.out.println("\nИтог минимизации: "+r);
     }
 
     private static List<String> makeUnique(List<String> list){
         Set<String> set = new HashSet<>(list);
         list.clear();
         list.addAll(set);
-        list.removeAll(Collections.singleton(null));
+        list.removeAll(Arrays.asList(null, "()"));
         return list;
     }
-
-    private static String chooseFormula(String[] variables, int index, boolean isHorizontal, boolean isANDSeparator) {
-         String stringOperator = isANDSeparator ? "&" : "|";
-        if (isHorizontal){
-            return index == 1 ? variables[0] : "!"+variables[0];
-        }
-        else{
-            switch (index){
-                case 0:{
-                    return "(!"+variables[1]+stringOperator+"!"+variables[2]+")";
-                }
-                case 1:{
-                    return "(!"+variables[1]+stringOperator+variables[2]+")";
-                }
-                case 2:{
-                    return "("+variables[1]+stringOperator+variables[2]+")";
-                }
-                default:{
-                    return "("+variables[1]+stringOperator+"!"+variables[2]+")";
-                }
-            }
-        }
-     }
 
     private static List<List<Boolean>> createKMap(boolean[] result) {
         List<List<Boolean>> res = new ArrayList<>();
@@ -564,7 +505,8 @@ public class Minimization {
         System.out.println("\n\nРасчетно-табличный метод\nСКНФ: "+defaultSCNF+"\n");
         printTable(defaultSCNF, false);
 
-        carnoMinimization(variables, table, result);
+        System.out.println("\nТабличный метод");
+        carnoMinimization(variables, result);
     }
 
 }
