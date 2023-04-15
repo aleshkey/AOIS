@@ -6,6 +6,9 @@ import util.Util;
 import java.util.*;
 
 public class Minimization {
+
+    private static final List<String> topVars = new ArrayList<>(Arrays.asList("!B !C", "!B C", "B C", "B !C"));
+    private static final List<String> leftVars = new ArrayList<>(Arrays.asList("!A", "A"));
      private static boolean find(List<String> originalString, String stringToFind){
         return originalString.contains(stringToFind);
     }
@@ -347,16 +350,16 @@ public class Minimization {
             vars = vars + variables[i];
         }
 
-        System.out.format("%10s", "\n" + vars);
-        System.out.format("%10s", "00");
-        System.out.format("%10s", "01");
-        System.out.format("%10s", "11");
-        System.out.format("%10s", "10");
 
+
+        System.out.format("%10s", "\n" + vars);
+        for (var s : topVars) {
+            System.out.format("%10s", s);
+        }
         List<List<Boolean>> parts =createKMap(result);
 
-        for(int i = 0; i< 2; i++){
-            System.out.format("%10s", "\n"+i);
+        for(int i = 0; i< leftVars.size(); i++){
+            System.out.format("%10s", "\n"+leftVars.get(i));
             for (var b : parts.get(i)){
                 System.out.format("%10s", Operations.fromBoolToInt(b));
 
@@ -369,20 +372,84 @@ public class Minimization {
 
     private static List<String> carno(List<List<Boolean>> parts, String[] variables, boolean isANDSeparator){
         List<String> res = new ArrayList<>();
-        if (!isANDSeparator)
-            parts = reverseList(parts);
-        for(int i=0; i< parts.size(); i++){
-            for (int j =0; j< parts.get(i).size(); j++){
-                if (j!=parts.get(i).size()-1 && parts.get(i).get(j) && parts.get(i).get(j+1)){
-                    res.add(chooseFormula(variables ,i, true, isANDSeparator));
+        for(int i = 0; i< parts.size(); i++){
+            List<String> buff = new ArrayList<>();
+            outerloop:
+            for (int start =0; start < parts.get(i).size(); start++) {
+                if (start != parts.get(i).size() - 1) {
+                    for (int finish = parts.get(i).size() - 1; finish >= start; finish--) {
+                        if (checkRow(parts.get(i), start, finish - start) && i != parts.size() - 1 && checkRow(parts.get(i + 1), start, finish - start)) {
+                            var atomTopTerms = getArrayOfAtomTerms(start, finish - start, i);
+                            var atomDownTerms = getArrayOfAtomTerms(start, finish - start, i + 1);
+                            var union = unionString(atomDownTerms, atomTopTerms);
+                            res.add("(" + fromListToNF(union, false) + ")");
+                        } else {
+                            if (checkRow(parts.get(i), start, finish - start) && start - finish != 0) {
+                                var atomTerms = getArrayOfAtomTerms(start, finish - start, i);
+                                res.add("(" + fromListToNF(atomTerms, false) + ")");
+                                break outerloop;
+                            }
+                        }
+                    }
                 }
-                if (i!=parts.size()-1 && parts.get(i).get(j) && parts.get(i+1).get(j)){
-                    res.add(chooseFormula(variables, j, false,isANDSeparator));
+                else {
+                    if (parts.get(i).get(start)){
+                        int counter = 0;
+                        for (int finish = parts.get(i).size()-1; finish>=0; finish--) {
+                            if (checkRow(parts.get(i), 0, finish - 1)) {
+                                var atomTerms = getArrayOfAtomTerms(0, finish - 1, i);
+                                var buffer = getArrayOfAtomTerms(parts.get(i).size() - 1, 0, i);
+                                var union = unionString(atomTerms, buffer);
+                                res.add("(" + fromListToNF(union, false) + ")");
+                                counter++;
+                            }
+                        }
+                        if (counter == 0){
+                            if (checkRow(parts.get(i), start, 0) && i != parts.size() - 1 && checkRow(parts.get(i + 1), start, 0)) {
+                                var atomTopTerms = getArrayOfAtomTerms(start, 0, i);
+                                var atomDownTerms = getArrayOfAtomTerms(start, 0, i + 1);
+                                var union = unionString(atomDownTerms, atomTopTerms);
+                                res.add("(" + fromListToNF(union, false) + ")");
+                            }
+                        }
+                    }
                 }
             }
         }
         res = makeUnique(res);
         return res;
+    }
+
+    private static List<String> getArrayOfAtomTerms(int start, int count, int otherTerm){
+         List<List<String>> allTerms = new ArrayList<>();
+         for(int i =start; i< start+count+1; i++){
+             var buff = new ArrayList<>(Arrays.asList(topVars.get(i).split(" ")));
+             buff.add(leftVars.get(otherTerm));
+             allTerms.add(buff);
+         }
+         List<String> res = new ArrayList<>(allTerms.get(0));
+         for(int i = 1; i< allTerms.size(); i++){
+             res = unionString(res, allTerms.get(i));
+         }
+         return res;
+    }
+
+
+    private static boolean isPower(double a, double b)
+    {
+        return (int)(Math.log(a)/Math.log(b))==(Math.log(a)/Math.log(b));
+    }
+
+    private static boolean checkRow(List<Boolean> list, int start, int count){
+         if (isPower(count+1, 2)) {
+             for (int i = start; i < start + count+1; i++) {
+                 if (!list.get(i)) {
+                     return false;
+                 }
+             }
+             return true;
+         }
+         else return false;
     }
 
     private static List<List<Boolean>> reverseList(List<List<Boolean>> parts) {
