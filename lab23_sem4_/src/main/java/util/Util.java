@@ -4,6 +4,8 @@ import java.util.*;
 
 public class Util {
 
+    private static List<List < List<String> > > pairs = new ArrayList<>();
+
     public static char[] getStringDifference(String s1, String s2) {
         HashSet<Character> set1 = new HashSet<>();
         HashSet<Character> set2 = new HashSet<>();
@@ -38,6 +40,23 @@ public class Util {
         return s;
     }
 
+    public static List<List < List<String> > > generateAllSubsets(List<List<String>> list) {
+        pairs= new ArrayList<>();
+        generateAllSubsets(list, new ArrayList<>(), 0);
+        pairs.removeAll(Collections.singleton(new ArrayList<>()));
+        return pairs;
+    }
+
+    private static void generateAllSubsets(List<List<String>> list, List<List<String>> current, int index) {
+        if (index == list.size()) {
+            pairs.add(current);
+            return;
+        }
+        generateAllSubsets(list, current, index + 1);
+        List<List<String>> updated = new ArrayList<>(current);
+        updated.add(list.get(index));
+        generateAllSubsets(list, updated, index + 1);
+    }
 
     public static List<List<String>> gluingPKNF(String PDNF){
         String[] parts = PDNF.split(" \\| ");

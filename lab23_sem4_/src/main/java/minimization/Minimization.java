@@ -1,10 +1,14 @@
 package minimization;
 
 import operations.Operations;
+import util.Util;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 public class Minimization {
+
+    private static final int SIZE = 3;
 
     private static final List<String> topVars = new ArrayList<>(Arrays.asList("!B !C", "!B C", "B C", "B !C"));
     private static final List<String> leftVars = new ArrayList<>(Arrays.asList("!A", "A"));
@@ -99,11 +103,13 @@ public class Minimization {
     }
 
     private static boolean checkReversed(List<String> expression1, List<String> expression2){
-         for (var str : expression2){
-             if (expression1.contains(reverse(str))){
-                 return true;
-             }
-         }
+        if (expression1.size() == expression2.size()) {
+            for (var str : expression2) {
+                if (expression1.contains(reverse(str))) {
+                    return true;
+                }
+            }
+        }
          return false;
     }
 
@@ -333,80 +339,168 @@ public class Minimization {
 
     }
 
-    private static List<String> carno(List<List<Boolean>> parts){
-        List<String> res = new ArrayList<>();
-        for(int i = 0; i< parts.size(); i++){
-            for (int start =0; start < parts.get(i).size(); start++) {
-                if (start != parts.get(i).size() - 1) {
-                    for (int finish = parts.get(i).size() - 1; finish >= start; finish--) {
-                        if (checkRow(parts.get(i), start, finish - start) && i != parts.size() - 1 && checkRow(parts.get(i + 1), start, finish - start)) {
-                            if(!parts.get(i).get(start) && !parts.get(i).get(parts.get(i).size()-1) && !parts.get(i+1).get(start) && !parts.get(i+1).get(parts.get(i).size()-1)) {
-                                var atomTopTerms = getArrayOfAtomTerms(start, finish - start, i);
-                                var atomDownTerms = getArrayOfAtomTerms(start, finish - start, i + 1);
-                                var union = unionString(atomDownTerms, atomTopTerms);
-                                res.add("(" + fromListToNF(union, false) + ")");
-                            }
-                        } else {
-                            if (checkRow(parts.get(i), start, finish - start) && start - finish != 0) {
-                                var atomTerms = getArrayOfAtomTerms(start, finish - start, i);
-                                res.add("(" + fromListToNF(atomTerms, false) + ")");
-                            }
-                        }
+    private static List<List<String>> checkHorizontal(List<List<Boolean>> parts){
+        List<List<String>> res = new ArrayList<>();
+        for (int i = 0; i<parts.size(); i++){
+            for (int j = 0; j < parts.get(i).size(); j++){
+                for (int counter = SIZE; counter>=0; counter--){
+                    if (parts.get(i).get(j) && checkRow(parts.get(i), j, counter) && !res.contains(getArrayOfAtomTerms(j, counter, i))){
+                        res.add(getArrayOfAtomTerms(j, counter, i));
                     }
                 }
-                else {
-                    if (parts.get(i).get(start) && i!=parts.size()-1 &&!parts.get(i+1).get(start)) {
-                        int counter = 0;
-                        for (int finish = parts.get(i).size() - 1; finish >= 0; finish--) {
-                            if (checkRow(parts.get(i), 0, finish - 1)) {
-                                var atomTerms = getArrayOfAtomTerms(0, finish - 1, i);
-                                var buffer = getArrayOfAtomTerms(parts.get(i).size() - 1, 0, i);
-                                var union = unionString(atomTerms, buffer);
-                                res.add("(" + fromListToNF(union, false) + ")");
-                                counter++;
-                            }
-                        }
-                        if (counter == 0) {
-                            if (checkRow(parts.get(i), start, 0) && i != parts.size() - 1 && checkRow(parts.get(i + 1), start, 0)) {
-                                var atomTopTerms = getArrayOfAtomTerms(start, 0, i);
-                                var atomDownTerms = getArrayOfAtomTerms(start, 0, i + 1);
-                                var union = unionString(atomDownTerms, atomTopTerms);
-                                res.add("(" + fromListToNF(union, false) + ")");
-                            }
-                        }
-                    }
-                    else {
-                        if (parts.get(i).get(start) && i!=parts.size()-1 && parts.get(i+1).get(start)){
-                            var atomTopVars =getArrayOfAtomTerms(start, 0, i);
-                            var atomDownVars = getArrayOfAtomTerms(start, 0, i+1);
-                            var uniqueTerms = unionString(atomDownVars, atomTopVars);
-                            for (int finish = 0; finish<parts.get(i).size()-1; finish++){
-                                var topVars = getArrayOfAtomTerms(0, finish, i);
-                                var downVars = getArrayOfAtomTerms(0, finish, i+1);
-                                var union = unionString(topVars, downVars);
-                                res.add("("+fromListToNF(unionString(uniqueTerms, union), false)+")");
-                            }
+            }
+        }
+        return res;
+    }
+
+    private static List<List<String>> checkVertical(List<List<Boolean>> parts){
+        List<List<String>> res = new ArrayList<>();
+        for (int i = 0; i < SIZE+1; i++){
+            if (parts.get(0).get(i) && parts.get(1).get(i)){
+                for (int counter = SIZE; counter>=0; counter--){
+                    if (checkRow(parts.get(0), i, counter) && checkRow(parts.get(1), i, counter)){
+                        var top = getArrayOfAtomTerms(i, counter, 0);
+                        var down = getArrayOfAtomTerms(i, counter, 1);
+                        if (!res.contains(unionString(top, down))){
+                            res.add(unionString(top, down));
                         }
                     }
                 }
             }
         }
-        res = makeUnique(res);
+        return res;
+    }
+
+    private static List<String> carno(List<List<Boolean>> parts){
+        List<String> res = new ArrayList<>();
+        var bufH = checkHorizontal(parts);
+        var bufV = checkVertical(parts);
+        List<List<String>> newList = new ArrayList<>();
+        newList.addAll(bufH);
+        newList.addAll(bufV);
+        var allSubsets = Util.generateAllSubsets(newList);
+        res = createNFList(enumeration(allSubsets, parts));
+        return res;
+    }
+
+    private static List<String> createNFList(List<List<String>> bestVariant) {
+        List<String> res = new ArrayList<>();
+        for (int i = 0; i<bestVariant.size(); i++){
+            res.add("("+fromListToNF(bestVariant.get(i), false)+")");
+        }
+        return res;
+    }
+
+    private static boolean isSwitched(Map<String, Boolean> map){
+        for (boolean value : map.values()) {
+            if (!value) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static List<List<String>> enumeration(List<List<List<String>>> allSubsets, List<List<Boolean>> parts) {
+        List<List<String>> res = new ArrayList<>();
+        List<List<List<String>>> allVariants = new ArrayList<>();
+        for (var subset : allSubsets){
+            Map<String, Boolean> switchedKMap = createKMap(parts);
+            switchedKMap = switchKMap(subset, switchedKMap);
+            if (isSwitched(switchedKMap)){
+                allVariants.add(subset);
+            }
+        }
+
+        res = chooseBestVariant(allVariants);
+
+        return res;
+    }
+
+    private static List<List<String>> chooseBestVariant(List<List<List<String>>> allVariants) {
+        int minSize = allVariants.get(0).size();
+        List<List<List<String>>> allBestVariants = new ArrayList<>();
+        for (var variant : allVariants) {
+            if (variant.size() < minSize){
+                allBestVariants.clear();
+                minSize = variant.size();
+            }
+            if (variant.size() == minSize){
+                allBestVariants.add(variant);
+            }
+        }
+        List<List<String>> res = allBestVariants.get(0);
+        for (var bestVariant : allBestVariants){
+            if (getMaxSize(bestVariant) < getMaxSize(res)){
+                res = bestVariant;
+            }
+        }
+        return res;
+
+    }
+
+    private static int getMaxSize(List<List<String>> listVariants){
+        int max = -1;
+        for(var variant : listVariants){
+            if (max < variant.size()){
+                max = variant.size();
+            }
+        }
+        return max;
+    }
+
+    private static Map<String, Boolean> switchKMap(List<List<String>> list, Map<String, Boolean> map){
+        for (var elem : list){
+            for (int i = 0; i<leftVars.size(); i++){
+                for (int j =0; j<topVars.size(); j++){
+                    List<String> vars = new ArrayList<>(Collections.singleton(leftVars.get(i)));
+                    vars.addAll(Arrays.asList(topVars.get(j).split(" ")));
+                    if (vars.containsAll(elem)){
+                        map.put(leftVars.get(i)+" "+topVars.get(j), true);
+                    }
+                }
+            }
+        }
+        return map;
+    }
+
+    private static Map<String, Boolean> createKMap(List<List<Boolean>> parts){
+        Map<String, Boolean> res  = new HashMap<>();
+        for (int i =0 ;i <parts.size(); i++){
+            for (int j =0; j<parts.get(i).size(); j++){
+                if (parts.get(i).get(j)){
+                    res.put(leftVars.get(i)+" "+topVars.get(j), false);
+                }
+            }
+        }
         return res;
     }
 
     private static List<String> getArrayOfAtomTerms(int start, int count, int otherTerm){
-         List<List<String>> allTerms = new ArrayList<>();
-         for(int i =start; i< start+count+1; i++){
-             var buff = new ArrayList<>(Arrays.asList(topVars.get(i).split(" ")));
-             buff.add(leftVars.get(otherTerm));
-             allTerms.add(buff);
-         }
-         List<String> res = new ArrayList<>(allTerms.get(0));
-         for(int i = 1; i< allTerms.size(); i++){
-             res = unionString(res, allTerms.get(i));
-         }
-         return res;
+        List<List<String>> allTerms = new ArrayList<>();
+        if (start+count< topVars.size()) {
+            for (int i = start; i < start + count + 1; i++) {
+                var buff = new ArrayList<>(Arrays.asList(topVars.get(i).split(" ")));
+                buff.add(leftVars.get(otherTerm));
+                allTerms.add(buff);
+            }
+        }
+        else {
+            for (int i = start; i < topVars.size(); i++) {
+                var buff = new ArrayList<>(Arrays.asList(topVars.get(i).split(" ")));
+                buff.add(leftVars.get(otherTerm));
+                allTerms.add(buff);
+            }
+            for (int i = 0; i < start+count-topVars.size(); i++) {
+                var buff = new ArrayList<>(Arrays.asList(topVars.get(i).split(" ")));
+                buff.add(leftVars.get(otherTerm));
+                allTerms.add(buff);
+            }
+        }
+        List<String> res = new ArrayList<>(allTerms.get(0));
+        for(int i = 1; i< allTerms.size(); i++){
+            res = unionString(res, allTerms.get(i));
+        }
+        return res;
     }
 
 
@@ -416,10 +510,24 @@ public class Minimization {
     }
 
     private static boolean checkRow(List<Boolean> list, int start, int count){
-         if (isPower(count+1, 2)) {
-             for (int i = start; i < start + count+1; i++) {
-                 if (!list.get(i)) {
-                     return false;
+         if (isPower(count+1, 2) || count == 0) {
+             if (start+count < list.size()) {
+                 for (int i = start; i < start + count + 1; i++) {
+                     if (!list.get(i)) {
+                         return false;
+                     }
+                 }
+             }
+             else {
+                 for (int i = start; i < list.size(); i++) {
+                     if (!list.get(i)) {
+                         return false;
+                     }
+                 }
+                 for (int i = 0; i < start+count-list.size()+1; i++){
+                     if (!list.get(i)) {
+                         return false;
+                     }
                  }
              }
              return true;
