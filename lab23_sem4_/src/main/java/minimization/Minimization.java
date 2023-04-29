@@ -4,13 +4,13 @@ import operations.Operations;
 import util.Util;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 public class Minimization {
 
-    private static final int SIZE = 3;
+    private static final int SIZE = 4;
 
     private static final List<String> topVars = new ArrayList<>(Arrays.asList("!B !C", "!B C", "B C", "B !C"));
+
     private static final List<String> leftVars = new ArrayList<>(Arrays.asList("!A", "A"));
 
     private static String reverse(String originalString){
@@ -28,7 +28,6 @@ public class Minimization {
         String reverseOperator = isANDSeparator ? "\\|" : "&";
 
         String[] termArray = originalString.split(reverseOperator);
-
 
         if (termArray.length > 1) {
             for (var term : termArray) {
@@ -183,11 +182,8 @@ public class Minimization {
         for (var str : constituents){
             System.out.format("%20s", str);
         }
-
         var implications = divideString(gluing(SNF, isANDSeparator), !isANDSeparator);
-
         List<List<Integer>> constituentsToImplications = new ArrayList<>();
-
         for (String implication : implications) {
             System.out.format("\n%20s", implication);
             List<Integer> thisConstituentImplications = new ArrayList<>();
@@ -199,44 +195,39 @@ public class Minimization {
             }
             constituentsToImplications.add(thisConstituentImplications);
         }
-
         List<Integer> resId = new ArrayList<>();
-
         Map <Integer, Boolean> switchedConstituents = createHashMap(constituents);
-
         for (Map.Entry<Integer, Boolean> entry : switchedConstituents.entrySet()) {
             if (getImplicationsOfConstituents(entry.getKey(), constituentsToImplications).size() == 1){
-                switchedConstituents = turnOnConstituent(switchedConstituents , constituentsToImplications.get(getImplicationsOfConstituents(entry.getKey(), constituentsToImplications).get(0)));
+                switchedConstituents = turnOnConstituent(switchedConstituents ,
+                                       constituentsToImplications.get(
+                                               getImplicationsOfConstituents(entry.getKey(), constituentsToImplications).get(0))
+                                       );
                 resId.add(getImplicationsOfConstituents(entry.getKey(), constituentsToImplications).get(0));
             }
         }
-
-
         while (!isStrongTable(switchedConstituents)){
             int bestChoice = chooseBestVariant(switchedConstituents, constituentsToImplications);
             switchedConstituents = turnOnConstituent(switchedConstituents , constituentsToImplications.get(bestChoice));
             resId.add(bestChoice);
         }
-
         printResult(implications, resId, isANDSeparator);
     }
 
     private static int chooseBestVariant(Map<Integer, Boolean> switchedConstituents, List<List<Integer>> constituentsToImplications) {
-
          Map<Integer, Integer> implicationsToNumberUnswitchedConstituents = new HashMap<>();
          List<Integer> unswitched = new ArrayList<>();
-        for (Map.Entry<Integer, Boolean> entry : switchedConstituents.entrySet()) {
-            if (!entry.getValue()) {
-                unswitched.add(entry.getKey());
-            }
-        }
-
+         for (Map.Entry<Integer, Boolean> entry : switchedConstituents.entrySet()) {
+             if (!entry.getValue()) {
+                 unswitched.add(entry.getKey());
+             }
+         }
          for (int index = 0; index<constituentsToImplications.size(); index++){
              implicationsToNumberUnswitchedConstituents.put(index, intersection(unswitched, constituentsToImplications.get(index)).size());
          }
-
          return findMax(implicationsToNumberUnswitchedConstituents);
     }
+
 
     private static int findMax(Map<Integer, Integer> implicationsToNumberUnswitchedConstituents) {
         int max = -1;
@@ -326,24 +317,20 @@ public class Minimization {
         System.out.format("%20s", vars);
         printTopVars();
         List<List<Boolean>> parts =createKMap(result);
-
         for(int i = 0; i< leftVars.size(); i++){
-            System.out.println();
-            System.out.format("%20s", leftVars.get(i));
-            for (var b : parts.get(i)){
-                System.out.format("%20s", Operations.fromBoolToInt(b));
+            System.out.format("\n%20s", leftVars.get(i));
+            for (var bool : parts.get(i)){
+                System.out.format("%20s", Operations.fromBoolToInt(bool));
             }
         }
-
         printCarno(parts);
-
     }
 
     private static List<List<String>> checkHorizontal(List<List<Boolean>> parts){
         List<List<String>> res = new ArrayList<>();
         for (int i = 0; i<parts.size(); i++){
             for (int j = 0; j < parts.get(i).size(); j++){
-                for (int counter = SIZE; counter>=0; counter--){
+                for (int counter = SIZE; counter>=1; counter--){
                     if (parts.get(i).get(j) && checkRow(parts.get(i), j, counter) && !res.contains(getArrayOfAtomTerms(j, counter, i))){
                         res.add(getArrayOfAtomTerms(j, counter, i));
                     }
@@ -355,9 +342,9 @@ public class Minimization {
 
     private static List<List<String>> checkVertical(List<List<Boolean>> parts){
         List<List<String>> res = new ArrayList<>();
-        for (int i = 0; i < SIZE+1; i++){
+        for (int i = 0; i < SIZE; i++){
             if (parts.get(0).get(i) && parts.get(1).get(i)){
-                for (int counter = SIZE; counter>=0; counter--){
+                for (int counter = SIZE; counter>=1; counter--){
                     if (checkRow(parts.get(0), i, counter) && checkRow(parts.get(1), i, counter)){
                         var top = getArrayOfAtomTerms(i, counter, 0);
                         var down = getArrayOfAtomTerms(i, counter, 1);
@@ -372,12 +359,12 @@ public class Minimization {
     }
 
     private static List<String> carno(List<List<Boolean>> parts){
-        List<String> res = new ArrayList<>();
-        var bufH = checkHorizontal(parts);
-        var bufV = checkVertical(parts);
+        List<String> res;
+        var horizontalGroups = checkHorizontal(parts);
+        var verticalGroups = checkVertical(parts);
         List<List<String>> newList = new ArrayList<>();
-        newList.addAll(bufH);
-        newList.addAll(bufV);
+        newList.addAll(horizontalGroups);
+        newList.addAll(verticalGroups);
         var allSubsets = Util.generateAllSubsets(newList);
         res = createNFList(enumeration(allSubsets, parts));
         return res;
@@ -385,8 +372,8 @@ public class Minimization {
 
     private static List<String> createNFList(List<List<String>> bestVariant) {
         List<String> res = new ArrayList<>();
-        for (int i = 0; i<bestVariant.size(); i++){
-            res.add("("+fromListToNF(bestVariant.get(i), false)+")");
+        for (List<String> list : bestVariant) {
+            res.add("(" + fromListToNF(list, false) + ")");
         }
         return res;
     }
@@ -401,7 +388,7 @@ public class Minimization {
     }
 
     private static List<List<String>> enumeration(List<List<List<String>>> allSubsets, List<List<Boolean>> parts) {
-        List<List<String>> res = new ArrayList<>();
+        List<List<String>> res;
         List<List<List<String>>> allVariants = new ArrayList<>();
         for (var subset : allSubsets){
             Map<String, Boolean> switchedKMap = createKMap(parts);
@@ -435,7 +422,6 @@ public class Minimization {
             }
         }
         return res;
-
     }
 
     private static int getMaxSize(List<List<String>> listVariants){
@@ -450,12 +436,12 @@ public class Minimization {
 
     private static Map<String, Boolean> switchKMap(List<List<String>> list, Map<String, Boolean> map){
         for (var elem : list){
-            for (int i = 0; i<leftVars.size(); i++){
-                for (int j =0; j<topVars.size(); j++){
-                    List<String> vars = new ArrayList<>(Collections.singleton(leftVars.get(i)));
-                    vars.addAll(Arrays.asList(topVars.get(j).split(" ")));
-                    if (vars.containsAll(elem)){
-                        map.put(leftVars.get(i)+" "+topVars.get(j), true);
+            for (String leftVar : leftVars) {
+                for (String topVar : topVars) {
+                    List<String> vars = new ArrayList<>(Collections.singleton(leftVar));
+                    vars.addAll(Arrays.asList(topVar.split(" ")));
+                    if (vars.containsAll(elem)) {
+                        map.put(leftVar + " " + topVar, true);
                     }
                 }
             }
@@ -478,7 +464,7 @@ public class Minimization {
     private static List<String> getArrayOfAtomTerms(int start, int count, int otherTerm){
         List<List<String>> allTerms = new ArrayList<>();
         if (start+count< topVars.size()) {
-            for (int i = start; i < start + count + 1; i++) {
+            for (int i = start; i < start + count; i++) {
                 var buff = new ArrayList<>(Arrays.asList(topVars.get(i).split(" ")));
                 buff.add(leftVars.get(otherTerm));
                 allTerms.add(buff);
@@ -510,9 +496,9 @@ public class Minimization {
     }
 
     private static boolean checkRow(List<Boolean> list, int start, int count){
-         if (isPower(count+1, 2) || count == 0) {
+         if (isPower(count, 2) || count == 0) {
              if (start+count < list.size()) {
-                 for (int i = start; i < start + count + 1; i++) {
+                 for (int i = start; i < start + count; i++) {
                      if (!list.get(i)) {
                          return false;
                      }
@@ -524,7 +510,7 @@ public class Minimization {
                          return false;
                      }
                  }
-                 for (int i = 0; i < start+count-list.size()+1; i++){
+                 for (int i = 0; i < start+count-list.size(); i++){
                      if (!list.get(i)) {
                          return false;
                      }
@@ -553,14 +539,6 @@ public class Minimization {
         }
         var r = NFtoTDF(result.toString(), isANDSeparator);
         System.out.println("\nИтог минимизации: "+r);
-    }
-
-    private static List<String> makeUnique(List<String> list){
-        Set<String> set = new HashSet<>(list);
-        list.clear();
-        list.addAll(set);
-        list.removeAll(Arrays.asList(null, "()"));
-        return list;
     }
 
     private static List<List<Boolean>> createKMap(boolean[] result) {
