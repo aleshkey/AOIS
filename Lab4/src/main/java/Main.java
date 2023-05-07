@@ -19,11 +19,15 @@ public class Main {
     }
 
     public static void task2(){
-
+        Util.printConverterTable();
+        Util.convert();
     }
 
     public static void main(String[] args) {
         task1();
 
+        System.out.println();
+
+        task2();
     }
 }

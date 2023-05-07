@@ -1,7 +1,10 @@
 package utils;
 
 import constants.Constants;
+import minimization.Minimizer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Util {
@@ -16,6 +19,47 @@ public class Util {
             System.out.format("%10s", Constants.RESULT.get(i));
             System.out.println();
         }
+    }
+
+    public static void printConverterTable(){
+        for (int i = Constants.CONVERTER_TABLE.get(0).size()-1; i>=0; i--){
+            System.out.format("%10s |", (char)('A'+i));
+            for(int j =0; j<Constants.CONVERTER_TABLE.size(); j++){
+                System.out.format("%10s", Constants.CONVERTER_TABLE.get(j).get(i));
+            }
+            System.out.println();
+        }
+        System.out.println("-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+        for (int i = Constants.Y_TABLE.get(0).size()-1; i>=0; i--){
+            System.out.format("%10s |", "Y"+(i+1));
+            for(int j =0; j<Constants.Y_TABLE.size(); j++){
+                System.out.format("%10s", Constants.Y_TABLE.get(j).get(i));
+            }
+            System.out.println();
+        }
+    }
+
+    public static void convert(){
+        List<List<Boolean>> table = new ArrayList<>(Constants.CONVERTER_TABLE.subList(0, Constants.Y_TABLE.size()));
+        for (int i = 0; i<Constants.Y_TABLE.get(0).size(); i++){
+            var yValues = getYValues(i);
+            var SKNF = toNF(Arrays.asList("A", "B", "C", "D"), table, yValues, true);
+            System.out.println("SKNF (Y"+(i+1)+") = "+SKNF);
+            Minimizer.getShortForm(SKNF.replaceAll(" ", ""), false);
+
+        }
+    }
+
+    private static List<Boolean> getYValues(int index){
+        List<Boolean> res = new ArrayList<>();
+        for (var list : Constants.Y_TABLE){
+            for (int i =0; i<list.size(); i++){
+                if (i==index){
+                    res.add(list.get(i));
+                }
+            }
+        }
+        return res;
     }
 
 

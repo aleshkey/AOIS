@@ -67,17 +67,25 @@ public class Minimizer {
     private static String gluing(String originalString, boolean isANDSeparator){
         char reverseOperator = isANDSeparator ? '|' : '&';
         StringBuilder resultString = new StringBuilder();
-
         List<String> functionalParts = divideStringWithBrackets(originalString, isANDSeparator);
-
         for (int i = 0; i<functionalParts.size(); i++){
+            int counter = 0;
             for (int j = i + 1; j < functionalParts.size(); j++) {
                 if (!findSharedPart(functionalParts.get(i), functionalParts.get(j), isANDSeparator).equals("")) {
                     if (resultString.toString().equals("")) {
                         resultString.append(findSharedPart(functionalParts.get(i), functionalParts.get(j), isANDSeparator));
                     } else
                         resultString.append(reverseOperator).append(findSharedPart(functionalParts.get(i), functionalParts.get(j), isANDSeparator));
+                    functionalParts.remove(j);
+                    j--;
+                    counter++;
                 }
+            }
+            if (counter == 0){
+                if (resultString.toString().equals("")) {
+                    resultString.append("(").append(functionalParts.get(i)).append(")");
+                } else
+                    resultString.append(reverseOperator).append("(").append(functionalParts.get(i)).append(")");
             }
             functionalParts.remove(i);
             i--;
