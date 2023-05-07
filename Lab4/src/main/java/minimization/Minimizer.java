@@ -1,8 +1,12 @@
 package minimization;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Minimizer {
+
+    private static List<List<Integer>> pairs;
 
     private static boolean exist (String stringWhat, String stringIn, boolean isANDSeparator){
         String reverseOperator = isANDSeparator ? "\\|" : "&";
@@ -97,49 +101,80 @@ public class Minimizer {
         var constituents = divideString(SNF, !isANDSeparator);
         var implications = divideString(gluing(SNF, isANDSeparator), !isANDSeparator);
         List<List<Integer>> constituentsToImplications = new ArrayList<>();
-        if (implications.size() != 0) {
-            for (String implication : implications) {
-                List<Integer> thisConstituentImplications = new ArrayList<>();
-                for (int constituentsIndex = 0; constituentsIndex < constituents.size(); constituentsIndex++) {
-                    if (exist(implication.substring(1, implication.length() - 1), constituents.get(constituentsIndex), !isANDSeparator)) {
+
+        for (String implication : implications) {
+            List<Integer> thisConstituentImplications = new ArrayList<>();
+            for (int constituentsIndex = 0; constituentsIndex < constituents.size(); constituentsIndex++) {
+                if (exist(implication.substring(1, implication.length() - 1), constituents.get(constituentsIndex), !isANDSeparator)) {
                         thisConstituentImplications.add(constituentsIndex);
-                    }
-                }
-                constituentsToImplications.add(thisConstituentImplications);
-            }
-            List<Integer> resId = new ArrayList<>();
-            Map<Integer, Boolean> switchedConstituents = createHashMap(constituents);
-            for (Map.Entry<Integer, Boolean> entry : switchedConstituents.entrySet()) {
-                if (getImplicationsOfConstituents(entry.getKey(), constituentsToImplications).size() == 1) {
-                    switchedConstituents = turnOnConstituent(switchedConstituents,
-                            constituentsToImplications.get(
-                                    getImplicationsOfConstituents(entry.getKey(), constituentsToImplications).get(0))
-                    );
-                    resId.add(getImplicationsOfConstituents(entry.getKey(), constituentsToImplications).get(0));
                 }
             }
-            while (!isStrongTable(switchedConstituents)) {
-                int bestChoice = chooseBestVariant(switchedConstituents, constituentsToImplications);
-                switchedConstituents = turnOnConstituent(switchedConstituents, constituentsToImplications.get(bestChoice));
-                resId.add(bestChoice);
-            }
-            printResult(implications, resId, isANDSeparator);
+            constituentsToImplications.add(thisConstituentImplications);
         }
-        else System.out.println("Итог минимизации: "+SNF);
+        List<List<Integer>> allVariants = generateAllSubsets(IntStream.range(0, implications.size()).boxed().collect(Collectors.toList()));
+        List<List<Integer>> bestVariants = new ArrayList<>();
+        for (var variant : allVariants){
+            Map <Integer, Boolean> switchedConstituents = createHashMap(constituents);
+            for (var i : variant) {
+                var b = getImplicationsOfConstituents(i, constituentsToImplications);
+                switchedConstituents = turnOnConstituent(switchedConstituents, constituentsToImplications.get(i));
+            }
+            if (isStrongTable(switchedConstituents)){
+                bestVariants.add(variant);
+            }
+        }
+        var res = chooseBestVariantForTable(bestVariants, implications, isANDSeparator);
+        System.out.println("Итог минимизации: "+ res+"\n");
     }
 
-    private static int chooseBestVariant(Map<Integer, Boolean> switchedConstituents, List<List<Integer>> constituentsToImplications) {
-        Map<Integer, Integer> implicationsToNumberUnswitchedConstituents = new HashMap<>();
-        List<Integer> unswitched = new ArrayList<>();
-        for (Map.Entry<Integer, Boolean> entry : switchedConstituents.entrySet()) {
-            if (!entry.getValue()) {
-                unswitched.add(entry.getKey());
+    public static List<List <Integer>> generateAllSubsets(List<Integer> list) {
+        pairs= new ArrayList<>();
+        generateAllSubsets(list, new ArrayList<>(), 0);
+        pairs.removeAll(Collections.singleton(new ArrayList<>()));
+        return pairs;
+    }
+
+    private static void generateAllSubsets(List<Integer> list, List<Integer> current, int index) {
+        if (index == list.size()) {
+            pairs.add(current);
+            return;
+        }
+        generateAllSubsets(list, current, index + 1);
+        List<Integer> updated = new ArrayList<>(current);
+        updated.add(list.get(index));
+        generateAllSubsets(list, updated, index + 1);
+    }
+
+    private static String chooseBestVariantForTable(List<List<Integer>> variants,List<String> implications, boolean isANDSeparator) {
+        int min =1000000;
+        String stringOperator = isANDSeparator ? "&" : "\\|";
+        String reverseOperator = !isANDSeparator ? "&" : "\\|";
+        String res = "";
+        for (var variant : variants){
+            var b = fromListToFormula(variant, implications, !isANDSeparator);
+            var sep = NFtoTDF(b, isANDSeparator);
+            if (sep.split(reverseOperator).length < min){
+                res = sep;
+                min = sep.split(reverseOperator).length;
             }
         }
-        for (int index = 0; index<constituentsToImplications.size(); index++){
-            implicationsToNumberUnswitchedConstituents.put(index, intersection(unswitched, constituentsToImplications.get(index)).size());
+        return res;
+    }
+
+    private static String fromListToFormula(List<Integer> list, List<String> implications, boolean isANDSeparator){
+        String stringOperator = isANDSeparator ? "&" : "|";
+        StringBuilder res = new StringBuilder();
+        for (int i =0; i< implications.size();i++){
+            if (list.contains(i)){
+                if (res.toString().equals("")){
+                    res.append(implications.get(i));
+                }
+                else {
+                    res.append(stringOperator).append(implications.get(i));
+                }
+            }
         }
-        return findMax(implicationsToNumberUnswitchedConstituents);
+        return res.toString();
     }
 
 
@@ -236,7 +271,7 @@ public class Minimizer {
         return (originalString.charAt(0)=='!') ? originalString.substring(1) : "!" + originalString;
     }
 
-    private static String NFtoTDF(String originalString, boolean isANDSeparator){
+    public static String NFtoTDF(String originalString, boolean isANDSeparator){
         List<String> functionParts = divideStringWithBrackets(originalString, isANDSeparator);
         StringBuilder res = new StringBuilder();
         String stringOperator = isANDSeparator ? "&" : "\\|";
