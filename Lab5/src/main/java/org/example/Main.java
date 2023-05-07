@@ -8,8 +8,9 @@ import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) {
+        Util.printTable();
         for(int i = 0; i< Constants.H_Values.get(0).size(); i++) {
-            var sdnf = Util.toNF(Arrays.asList("A", "B", "C", "D", "V"), Util.unionTable(), Util.getHValues(i), false);
+            var sdnf = Util.toNF(Arrays.asList("A", "B", "C", "D", "V"), Util.unionTable(), Util.getValues(Constants.H_Values, i), false);
             System.out.println("SDNF h"+(i+1)+": "+sdnf);
             Minimizer.getShortForm(sdnf.replace(" ", ""), true);
         }

@@ -7,6 +7,29 @@ import java.util.List;
 
 public class Util {
 
+    public static void printTable(){
+        System.out.format("%10s |", "V");
+        for (int i = 0; i<Constants.V_VALUES.size(); i++){
+            System.out.format("%10s",Constants.V_VALUES.get(i));
+        }
+        System.out.println("\n"+Constants.LINE);
+        for (int i = Constants.VARS_TABLE.get(0).size()-1; i>=0; i--){
+            System.out.format("%10s |", (char) ('A' + i));
+            for(var elem : getValues(Constants.VARS_TABLE, i)){
+                System.out.format("%10s", elem);
+            }
+            System.out.println();
+        }
+        System.out.println(Constants.LINE);
+        for(int i =Constants.H_Values.get(0).size()-1; i>=0; i--){
+            System.out.format("%10s |",  "H" + i);
+            for(var elem : getValues(Constants.H_Values, i)){
+                System.out.format("%10s", elem);
+            }
+            System.out.println();
+        }
+    }
+
     public static List<List<Boolean>> unionTable(){
         List<List<Boolean>> temp = new ArrayList<>();
         for (var row : Constants.VARS_TABLE) {
@@ -18,9 +41,9 @@ public class Util {
         return temp;
     }
 
-    public static List<Boolean> getHValues(int index){
+    public static List<Boolean> getValues(List<List<Boolean>> table,int index){
         List<Boolean> res = new ArrayList<>();
-        for (var list : Constants.H_Values){
+        for (var list : table){
             for (int i =0; i<list.size(); i++){
                 if (i==index){
                     res.add(list.get(i));
