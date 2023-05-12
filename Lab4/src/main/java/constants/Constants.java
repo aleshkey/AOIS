@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Constants {
+    public static int MAX_SIZE=10000;
+
     public static List<List<Boolean>> SUMMATOR_TABLE = new ArrayList<>(){{
         add(Arrays.asList(false, false, false));
         add(Arrays.asList(false, false, true));

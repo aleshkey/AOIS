@@ -39,6 +39,16 @@ public class Util {
         }
     }
 
+    public static List<String> makeUnique(List<String> arr) {
+        List<String> uniqueVars = new ArrayList<>();
+        for(var str : arr){
+            if (!uniqueVars.contains(str) && !str.equals("")){
+                uniqueVars.add(str);
+            }
+        }
+        return uniqueVars;
+    }
+
     public static void convert(){
         List<List<Boolean>> table = new ArrayList<>(Constants.CONVERTER_TABLE.subList(0, Constants.Y_TABLE.size()));
         for (int i = 0; i<Constants.Y_TABLE.get(0).size(); i++){
@@ -46,7 +56,6 @@ public class Util {
             var SKNF = toNF(Arrays.asList("A", "B", "C", "D"), table, yValues, true);
             System.out.println("SKNF (Y"+(i+1)+") = "+SKNF);
             Minimizer.getShortForm(SKNF.replaceAll(" ", ""), false);
-
         }
     }
 
