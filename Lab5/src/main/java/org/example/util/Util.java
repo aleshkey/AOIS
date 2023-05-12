@@ -8,6 +8,14 @@ import java.util.List;
 public class Util {
 
     public static void printTable(){
+        for (int i = Constants.VARS_CHANGED_TABLE.get(0).size()-1; i>=0; i--){
+            System.out.format("%10s |", (char) ('A' + i)+"*");
+            for(var elem : getValues(Constants.VARS_CHANGED_TABLE, i)){
+                System.out.format("%10s", elem);
+            }
+            System.out.println();
+        }
+        System.out.println(Constants.LINE);
         System.out.format("%10s |", "V");
         for (int i = 0; i<Constants.V_VALUES.size(); i++){
             System.out.format("%10s",Constants.V_VALUES.get(i));
@@ -22,7 +30,7 @@ public class Util {
         }
         System.out.println(Constants.LINE);
         for(int i =Constants.H_Values.get(0).size()-1; i>=0; i--){
-            System.out.format("%10s |",  "H" + i);
+            System.out.format("%10s |",  "H" + (i+1));
             for(var elem : getValues(Constants.H_Values, i)){
                 System.out.format("%10s", elem);
             }
@@ -32,13 +40,23 @@ public class Util {
 
     public static List<List<Boolean>> unionTable(){
         List<List<Boolean>> temp = new ArrayList<>();
-        for (var row : Constants.VARS_TABLE) {
+        for (var row : Constants.VARS_CHANGED_TABLE) {
             temp.add(new ArrayList<>(row));
         }
         for (int i =0; i< temp.size(); i++){
             temp.get(i).add(Constants.V_VALUES.get(i));
         }
         return temp;
+    }
+
+    public static List<String> makeUnique(List<String> arr) {
+        List<String> uniqueVars = new ArrayList<>();
+        for(var str : arr){
+            if (!uniqueVars.contains(str) && !str.equals("")){
+                uniqueVars.add(str);
+            }
+        }
+        return uniqueVars;
     }
 
     public static List<Boolean> getValues(List<List<Boolean>> table,int index){
