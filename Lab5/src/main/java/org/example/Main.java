@@ -13,7 +13,7 @@ public class Main {
             var sdnf = Util.toNF(Arrays.asList("A", "B", "C", "D", "V"), Util.unionTable(), Util.getValues(Constants.H_Values, i), false);
             System.out.println("SDNF H"+(i+1)+": "+sdnf);
             sdnf = Minimizer.NFtoTDF(sdnf.replaceAll(" ", ""), true);
-            System.out.println(Minimizer.NFtoTDF(Minimizer.getShortForm(sdnf.replaceAll(" ", ""), true), true));
+            System.out.println(Minimizer.getShortForm(sdnf.replaceAll(" ", ""), true));
         }
     }
 }

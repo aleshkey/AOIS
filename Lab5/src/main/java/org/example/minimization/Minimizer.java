@@ -227,7 +227,7 @@ public class Minimizer {
             }
         }
         var res = chooseBestVariantForTable(bestVariants, implications, isANDSeparator);
-        return res;
+        return NFtoTDF(res, isANDSeparator);
     }
 
     public static List<List <Integer>> generateAllSubsets(List<Integer> list) {

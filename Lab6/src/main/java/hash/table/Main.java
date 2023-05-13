@@ -5,9 +5,9 @@ import hash.table.table.TransportHashTable;
 public class Main {
     public static void main(String[] args) {
         TransportHashTable<String, String> table = new TransportHashTable<>(20);
-        table.put("one", "Один");
-        table.put("two", "Два");
-        table.put("three", "Три");
+        table.put("Автомобиль", "Один");
+        table.put("Автобус", "Два");
+        table.put("ваа", "Три");
         System.out.println(table);
 
         System.out.println(table.get("one"));
