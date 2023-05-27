@@ -7,64 +7,74 @@ import java.util.List;
 
 public class Search {
 
-    public static String comparison(String num1, String num2, int counter, boolean isGreater){
-        if (num1.length() == num2.length()) {
-            if (num1.charAt(counter) == num2.charAt(counter)) {
-                if (counter == num1.length()-1)
-                    return num1;
-                return comparison(num1, num2, counter + 1, isGreater);
-            } else {
-                return (num1.charAt(counter) > num2.charAt(counter) && isGreater) ||
-                       (num1.charAt(counter) < num2.charAt(counter) &&!isGreater) ? num1 : num2;
-            }
-        }
-        else
-            return (num1.length() > num2.length() && isGreater) ||
-                   (num1.length() < num2.length() &&!isGreater) ? num1 : num2;
+   private static boolean comparison(String word1, String word2){
+       boolean g = false;
+       boolean l = false;
+       for (int i = 0; i< word1.length(); i++){
+           if (g || (word1.charAt(i) == '0' && word2.charAt(i) == '1' && !l)){
+               g =true;
+           }
+           else
+               g = false;
+           if (l || (word1.charAt(i) == '1' && word2.charAt(i) == '0' && !g)){
+               l = true;
+           }
+           else
+               l= false;
+       }
+       if (g)
+           return true;
+
+       if (l)
+           return false;
+        return false;
+   }
+
+    public static List<String> sort(List<String> arr, boolean MAX_TO_MIN){
+       for (int i =0; i< arr.size()-1; i++){
+           for(int j=i+1;j<arr.size();j++){
+               if((comparison(arr.get(i),arr.get(j)) && MAX_TO_MIN) ||(!comparison(arr.get(i),arr.get(j)) && !MAX_TO_MIN)) {
+                   String temp = arr.get(i);
+                   arr.set(i, arr.get(j));
+                   arr.set(j, temp);
+               }
+           }
+       }
+       return arr;
     }
 
-    public static String findMinMax(List<String> arr, boolean isMax){
-        if(arr.size()>0){
-            var searched_value = String.valueOf(arr.get(0));
-            for (var elem : arr){
-                searched_value = comparison(searched_value, String.valueOf(elem), 0, isMax);
-            }
-            return searched_value;
-        }
-        else return "";
+    private static List<String> findMinMax(String word, List<String> arr, boolean isMax){
+       List<String> res = new ArrayList<>();
+       for(var elem : arr){
+           if ((comparison(word, elem) && isMax) || (!comparison(word, elem) && !isMax)){
+               res.add(elem);
+           }
+       }
+       return res;
     }
 
-    public static void getNearest(List<Integer> arr, int numToSearch, boolean isGreater){
-        List<String> allSearchedValues = new ArrayList<>();
-        for (int i =0; i< arr.size(); i++) {
-            if (arr.get(i) != numToSearch) {
-                allSearchedValues.add(comparison(String.valueOf(arr.get(i)), String.valueOf(numToSearch), 0, isGreater));
-            }
-            else {
-                System.out.println(arr.get(i));
-                return;
-            }
-        }
-        allSearchedValues = Util.makeUnique(allSearchedValues);
-        allSearchedValues.remove(String.valueOf(numToSearch));
-        var searchedValue = findMinMax(allSearchedValues, !isGreater);
-        if (!searchedValue.equals("")){
-            System.out.println(searchedValue);
-        }
-        else {
-            System.out.println("--");
-        }
+    public static String getNearest(int value, List<String> arr, boolean isGreater){
+        var binary = Util.toBinary(value);
+        var searched_value = sort(findMinMax(binary, arr, isGreater), !isGreater);
+        return searched_value.size()!=0 ? searched_value.get(0) : "";
     }
 
-    public static void getInterval(List<Integer> arr, int start, int finish){
-        List<Integer> res = new ArrayList<>();
-        for(var elem : arr){
-            if (!comparison(String.valueOf(elem), String.valueOf(start), 0, true).equals(String.valueOf(start)) &&
-                !comparison(String.valueOf(elem), String.valueOf(finish), 0, false).equals(String.valueOf(finish))){
+    public static List<String> border(int start, int finish, List<String> arr){
+       var binaryStart = Util.toBinary(start);
+       var binaryFinish = Util.toBinary(finish);
+
+       var maxBorder = borderFind(binaryStart, arr, true);
+       var minBorder = borderFind(binaryFinish, arr, false);
+       return sort(Util.intersection(maxBorder, minBorder),false);
+    }
+
+    private static List<String> borderFind(String value, List<String> arr, boolean isMax){
+       List<String> res = new ArrayList<>();
+        for (String elem : arr) {
+            if ((comparison(value, elem) && isMax) || (!comparison(value, elem) && !isMax)) {
                 res.add(elem);
             }
         }
-        System.out.println(res);
+       return res;
     }
-
 }
