@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        List<Integer> v = Arrays.asList(0, 0, 1);
+        List<Integer> v = Arrays.asList(1, 0, 1);
         AssociativeArray aa = new AssociativeArray();
         System.out.println("Matrix:");
         Util.print(aa.getArray());
@@ -16,7 +16,7 @@ public class Main {
         System.out.println("Diagonal:");
         Util.print(aa.getDiagonal());
         System.out.println();
-        System.out.println("5th word in matrix: "+aa.getAddress(5));
+        System.out.println("7th word in matrix: "+aa.getAddress(7));
         System.out.println("\n");
         aa.operations(v);
         Util.print(aa.getDiagonal());

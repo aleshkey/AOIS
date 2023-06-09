@@ -57,7 +57,7 @@ public class AssociativeArray {
     }
 
     public List<Integer> slicing(List<Integer> word, int x, int y){
-        return word.subList(x, y);
+        return word.subList(x, y+1);
     }
 
     public List<Integer> assigment(List<Integer> num1, List<Integer> num2){
@@ -77,7 +77,7 @@ public class AssociativeArray {
                 List<Integer> Aj = slicing(diagonal.get(i),3, 6);
                 List<Integer> Bj = slicing(diagonal.get(i), 7,10);
                 slicingNum = Util.sum(Aj, Bj);
-                System.out.println("Vj = V in word" + i);
+                System.out.println("Vj = V in word " + i);
                 diagonal.set(i, assigment(diagonal.get(i), slicingNum));
                 System.out.println(i+"th word in matrix: "+getAddress(i));
             }
@@ -114,7 +114,7 @@ public class AssociativeArray {
         System.out.println("Function "+number);
         System.out.println(address1+"th word in matrix: "+getAddress(address1));
         System.out.println(address2+"th word in matrix: "+getAddress(address2));
-        System.out.println("Result: " + res);
+        System.out.println("Result: " + Util.toBinary(res));
     }
 
     public void border(int address1, int address2){
@@ -125,12 +125,12 @@ public class AssociativeArray {
         List<List<Integer>> less = new ArrayList<>();
 
         if (!Util.comparison(binary1, binary2)){
-            greater = find(binary1, true);
-            less = find(binary2, false);
-        }
-        else {
             greater = find(binary1, false);
             less = find(binary2, true);
+        }
+        else {
+            greater = find(binary1, true);
+            less = find(binary2, false);
         }
 
         greater = Util.sort(greater);

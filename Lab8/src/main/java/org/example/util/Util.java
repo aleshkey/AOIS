@@ -10,22 +10,12 @@ public class Util {
 
     private static boolean hasAddition = false;
 
-    public static List<Integer> generateArray(int size){
-        List<Integer> arr = new ArrayList<>();
-        for (int i = 0; i< size; i++){
-            arr.add((int)(Math.random()*100));
-        }
-        return arr;
-    }
-
-    public static List<String> makeUnique(List<String> arr) {
-        List<String> uniqueVars = new ArrayList<>();
-        for(var str : arr){
-            if (!uniqueVars.contains(str) && !str.equals("")){
-                uniqueVars.add(str);
-            }
-        }
-        return uniqueVars;
+    public static String toBinary(List<Boolean> arr){
+        String res = "";
+        for (var elem : arr){
+            res = elem ? res + '1' : res + '0';
+         }
+        return res;
     }
 
     public static String toBinary(int num){
@@ -37,22 +27,6 @@ public class Util {
         var length = binary.length();
         for (int i =0 ; i < 8-length; i++){
             binary = '0'+binary;
-        }
-        return binary;
-    }
-
-    public static List<String> toBinary(List<Integer> arr){
-        List<String> binary = new ArrayList<>();
-        for(var elem : arr){
-            binary.add(Util.toBinary(elem));
-        }
-        return binary;
-    }
-
-    public static List<Integer> toDec(List<String> arr){
-        List<Integer> binary = new ArrayList<>();
-        for(var elem : arr){
-            binary.add(Util.toDec(elem));
         }
         return binary;
     }
@@ -76,19 +50,6 @@ public class Util {
             }
         }
         return res;
-    }
-
-    public static String changeSymbol(String originalString, int index, char symbol){
-        StringBuilder res = new StringBuilder();
-        for(int i =0; i<originalString.length(); i++){
-            if (i == index){
-                res.append(symbol);
-            }
-            else {
-                res.append(originalString.charAt(i));
-            }
-        }
-        return res.toString();
     }
 
     public static char addingDigits(char digit1, char digit2) {
@@ -120,12 +81,6 @@ public class Util {
         hasAddition = false;
         var result = binaryToList(resultInStr.toString());
         return result;
-    }
-
-    public static String reverse(String str){
-        StringBuilder sb = new StringBuilder(str);
-        sb.reverse();
-        return sb.toString();
     }
 
     private static String listToBinary(List<Integer> arr){
