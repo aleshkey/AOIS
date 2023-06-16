@@ -50,14 +50,30 @@ public class AssociativeArray {
 
     public String getAddress(int address){
         StringBuilder res = new StringBuilder();
-        for (int i = 0; i < diagonal.get(address).size(); i++){
-            res.append(diagonal.get(address).get(i));
+        for (int i = address; i< diagonal.size(); i++){
+            res.append(diagonal.get(i).get(address));
         }
+        for (int i =0; i< address; i++){
+            res.append(diagonal.get(i).get(address));
+        }
+
         return res.toString();
     }
 
     public List<Integer> slicing(List<Integer> word, int x, int y){
         return word.subList(x, y+1);
+    }
+
+    public List<Integer> getWord(int address){
+        List<Integer> res = new ArrayList<>();
+        for (int i = address; i< diagonal.size(); i++){
+            res.add(diagonal.get(i).get(address));
+        }
+        for (int i =0; i< address; i++){
+            res.add(diagonal.get(i).get(address));
+        }
+
+        return res;
     }
 
     public List<Integer> assigment(List<Integer> num1, List<Integer> num2){
@@ -72,22 +88,22 @@ public class AssociativeArray {
 
     public void operations(List<Integer> list){
         for(int i = 0; i <diagonal.size(); i++){
-            var slicingNum = slicing(diagonal.get(i), 0, 2);
+            var slicingNum = slicing(getWord(i), 0, 2);
             if (slicingNum.equals(list)){
-                List<Integer> Aj = slicing(diagonal.get(i),3, 6);
-                List<Integer> Bj = slicing(diagonal.get(i), 7,10);
+                List<Integer> Aj = slicing(getWord(i),3, 6);
+                List<Integer> Bj = slicing(getWord(i), 7,10);
                 slicingNum = Util.sum(Aj, Bj);
                 System.out.println("Vj = V in word " + i);
-                diagonal.set(i, assigment(diagonal.get(i), slicingNum));
-                System.out.println(i+"th word in matrix: "+getAddress(i));
+                setDiagonal(i, assigment(getWord(i), slicingNum));
+                System.out.println(i+"th word in matrix: "+getAddress(i)+"\n");
             }
         }
     }
 
     public void functions(int address1, int address2, int address3, int number){
         List<Boolean> res = new ArrayList<>();
-        var num1 = Util.intToBoolean(diagonal.get(address1));
-        var num2 = Util.intToBoolean(diagonal.get(address2));
+        var num1 = Util.intToBoolean(getWord(address1));
+        var num2 = Util.intToBoolean(getWord(address2));
         switch (number) {
             case 2 -> {
                 for (int i = 0; i < num1.size(); i++) {
@@ -110,17 +126,29 @@ public class AssociativeArray {
                 }
             }
         }
-        diagonal.set(address3, Util.booleanToInt(res));
+        setDiagonal(address3, Util.booleanToInt(res));
         System.out.println("Function "+number);
         System.out.println(address1+"th word in matrix: "+getAddress(address1));
         System.out.println(address2+"th word in matrix: "+getAddress(address2));
         System.out.println("Result: " + Util.toBinary(res));
     }
 
+    private void setDiagonal(int address, List<Integer> word){
+        int counter = 0;
+        for (int i = address; i < diagonal.size(); i++){
+            diagonal.get(i).set(address, word.get(counter));
+            counter++;
+        }
+        for (int i = 0; i < address; i++){
+            diagonal.get(i).set(address, word.get(counter));
+            counter++;
+        }
+    }
+
     public void border(int address1, int address2){
-        List<Integer> binary1 = diagonal.get(address1);
-        List<Integer> binary2 = diagonal.get(address2);
-        List<List<Integer>> interval = new ArrayList<List<Integer>>();
+        List<Integer> binary1 = getWord(address1);
+        List<Integer> binary2 = getWord(address2);
+        List<List<Integer>> interval = new ArrayList<>();
         List<List<Integer>> greater = new ArrayList<>();
         List<List<Integer>> less = new ArrayList<>();
 
